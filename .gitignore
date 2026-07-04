@@ -1,23 +1,17 @@
 # Build output
 output/
-*.apk
 *.idsig
+
+# Signed APKs in root (keep in output/)
+GP45_*.apk
+GP45_BUILD_*.apk
 
 # Keystore
 keystore/
 
-# Template
-template/*.apk
-
 # OS files
 .DS_Store
 Thumbs.db
-
-# Large data files (download via sync)
-assets/data_*.json
-assets/data_outlet.json
-assets/html5-qrcode.min.js
-assets/logo.jpg
 
 # Backup files
 *.bak
