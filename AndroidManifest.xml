@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.moors.gp45"
+    android:versionCode="1"
+    android:versionName="1.0.0"
+    android:compileSdkVersion="33"
+    android:compileSdkVersionCodename="13.0.0"
+    platformBuildVersionCode="33"
+    platformBuildVersionName="13.0.0">
+    
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33" />
+    
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    
+    <application
+        android:theme="@style/AppTheme"
+        android:label="GP45"
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:usesCleartextTraffic="true">
+        
+        <activity
+            android:label="GP45"
+            android:name="com.moors.MainActivity"
+            android:exported="true"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

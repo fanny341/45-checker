@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>GP45 DB v1.1.0 - Bundled Outlet Stock</title>
+<script src="html5-qrcode.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <div class="header" style="-webkit-user-select:none;user-select:none">
+    <div style="display:flex;align-items:center;position:relative">
+      <div style="flex:0 0 auto">
+        <button class="header-scanner" onclick="toggleScanner()" id="headerScanBtn">
+          <img src="ic_launcher.png" class="header-scanner-icon" alt="Scan">
+        </button>
+      </div>
+      <div style="flex:1;text-align:center" >
+        <h1><span>GPx45</span> CHECKER</h1>
+        <div class="sub">OFFLINE STOCK &amp; PRICE LOOKUP</div>
+      </div>
+      <div style="flex:0 0 auto">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </div>
+  <!-- Menu -->
+  <div class="menu-dropdown" id="menuDropdown">
+    <div class="menu-item" data-menu="sync" onclick="closeMenu();openSyncHistory()">🔄 Sync Data</div>
+    <div class="menu-item" data-menu="pricecard" onclick="closeMenu();showPriceCardPanel()">💰 Price Card</div>
+    <div class="menu-item" data-menu="omset" onclick="closeMenu();showOmsetPanel()">📈 OMSET</div>
+    <div class="menu-item" data-menu="about" onclick="closeMenu();showAbout()">ℹ About</div>
+    <div class="menu-item" data-menu="manual" onclick="closeMenu();showManual()">📖 Manual</div>
+    <div class="menu-item" data-menu="darkmode" onclick="closeMenu();toggleTheme()">🎨 Dark Mode</div>
+    <div class="menu-item" data-menu="settings" onclick="closeMenu();showSettings()">⚙️ Setting Server</div>
+      </div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-bar">
+    <button class="mode-btn active" id="modeLocalDB" onclick="setMode('localdb')">📋 OFFLINE</button>
+    <button class="mode-btn" id="modeServer81" onclick="setMode('server81')">🌐 ONLINE</button>
+    <button class="mode-btn" id="modeRelay" onclick="setMode('relay')">📡 RELAY</button>
+  </div>
+
+  <!-- Live Bar (shown in detail mode) -->
+  <div class="live-bar" id="liveBarServer81" style="display:none">🌐 ONLINE - Stok Semua Cabang</div>
+  <div class="live-bar" id="liveBarLocalDB" style="display:none">📋 OFFLINE - Data Lokal</div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar" onclick="showDataAge()">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Starting...</span>
+    <span class="count" id="itemCount"></span>
+    <span id="dataAge" style="font-size:10px;color:var(--text2);margin-left:auto;white-space:nowrap"></span>
+  </div>
+
+  <!-- Connection Status (for ONLINE & RELAY modes) -->
+  <div class="conn-bar" id="connBar" style="display:none">
+    <span class="dot" id="connDot"></span>
+    <span class="label" id="connLabel">⏳ Mengetes koneksi...</span>
+    <span class="ping" id="connPing"></span>
+  </div>
+
+  <!-- Database Info (shown in OFFLINE mode) -->
+  <div class="sync-info" id="syncInfo">
+    <div class="row">
+      <span class="label">📦 Database</span>
+      <span class="value" id="dbInfoItems">-</span>
+    </div>
+    <div class="row">
+      <span class="label">🕐 Update</span>
+      <span class="value" id="dbInfoTime">-</span>
+    </div>
+  </div>
+  
+  <!-- Sync Overlay -->
+  <div class="sync-overlay" id="syncOverlay">
+    <div class="sync-panel" id="syncPanel">
+      <div id="syncLoading">
+        <div class="spinner"></div>
+        <div id="syncTitle" style="font-size:16px;font-weight:700;margin:8px 0 4px">Sync Database</div>
+        <div id="syncSub" style="font-size:12px;color:var(--text2)">Mendownload data terbaru...</div>
+        <div id="syncStatus" style="font-size:12px;color:var(--text2);margin-top:8px">Menghubungi server...</div>
+        <div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill" id="syncBar" style="width:10%"></div></div>
+        <div id="syncProgressText" style="font-size:11px;color:var(--text2)">Mengirim request...</div>
+        <button onclick="cancelSync()" id="syncCancelBtn" style="width:100%;padding:10px;margin-top:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">✕ Batal</button>
+      </div>
+      <div id="syncResult" style="display:none;text-align:left">
+        <div style="font-size:40px;margin-bottom:4px" id="syncIcon">✅</div>
+        <div style="font-size:16px;font-weight:700">Sinkron Berhasil!</div>
+        <div class="stat" style="margin-top:8px">📦 Items: <span id="syncOldCount">0</span> → <span id="syncNewCount">0</span></div>
+        <div class="stat">🕐 Update: <span id="syncOldDate">-</span> → <span id="syncNewDate">-</span></div>
+        <div class="stat">📊 Size: <span id="syncSize">-</span></div>
+        <div class="stat">🏷️ Harga berubah: <span id="syncPriceChange">0</span></div>
+        <div class="stat">📦 Stok berubah: <span id="syncStockChange">0</span></div>
+        <div class="stat">✨ Baru: <span id="syncAdded">0</span></div>
+        <div class="stat">❌ Hilang: <span id="syncRemoved">0</span></div>
+        <div class="stat">📋 Sama: <span id="syncKept">0</span></div>
+        <div id="syncSampleChanges" style="display:none;margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:4px">🏷️ Contoh perubahan harga:</div>
+          <div id="syncSampleList"></div>
+        </div>
+      </div>
+      <div id="syncError" style="display:none">
+        <div style="font-size:40px;margin-bottom:4px">❌</div>
+        <div style="font-size:16px;font-weight:700">Sinkron Gagal</div>
+        <div class="stat">Cek koneksi ke server 200</div>
+        <div id="syncErrorMsg" style="font-size:12px;color:var(--primary);margin-top:6px"></div>
+      </div>
+      <button id="syncRetryBtn" style="display:none;width:100%;padding:10px;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeSync()">✕ Tutup</button>
+    </div>
+  </div>
+
+  <div class="sync-overlay" id="syncHistOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;justify-content:center;align-items:center;padding:20px">
+    <div style="background:var(--card);border-radius:20px;width:100%;max-width:420px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.2);overflow:hidden">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <span style="font-size:16px;font-weight:700">📋 Riwayat & Detail Sync</span>
+        <button onclick="closeSyncHistory()" style="width:40px;height:40px;border:none;border-radius:50%;background:var(--border);color:var(--text);font-size:20px;cursor:pointer;font-weight:700">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 20px 20px" id="syncHistContent">
+        <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Memuat...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div id="relayUrlRow" style="display:none!important;margin-bottom:8px">
+      <div style="display:flex;gap:6px">
+        <input type="url" id="relayUrlInput" value="" placeholder="https://gp45-relay.xmoritzu.workers.dev/" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">
+        <button onclick="saveRelayUrl()" style="padding:8px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Simpan</button>
+      </div>
+      <div id="relayStatus" style="display:none!important;font-size:11px;color:var(--text2);margin-top:4px;text-align:center"></div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Ketuk untuk mencari..." autocomplete="off">
+      <button class="clear-btn" id="clearBtn" onclick="doClearSearch()">✕</button>
+      <div class="suggestions" id="suggestions"></div>
+      <!-- History Overlay (replaces old picker position) -->
+      <div class="hist-overlay" id="histOverlay">
+        <div class="hist-panel">
+          <div class="hdr">
+            <h3>⏱️ Riwayat Pencarian</h3>
+            <button id="histCloseBtn">✕</button>
+          </div>
+          <div id="histFullList"></div>
+          <button class="hist-clear-all" id="histClearAllBtn">🗑️ Hapus Semua Riwayat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Card -->
+  <div id="resultCard" class="result-card"></div>
+
+  <!-- History Below -->
+  <div class="history-below" id="historyBelow" style="display:none">
+    <div class="history-below-header">
+      <span>⏱️ Riwayat Pencarian</span>
+      <button class="hist-pbtn" id="histBelowShowAllBtn">Lihat semua →</button>
+    </div>
+    <div id="historyBelowList"></div>
+  </div>
+
+  <!-- Scanner -->
+  <div id="scannerContainer">
+    <div id="scannerElement"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;width:100%;max-width:400px">
+      <button class="scan-close" onclick="stopScanner()" style="flex:1">✕ Tutup Scanner</button>
+      <button class="scan-torch" id="torchBtn" onclick="toggleTorch()" style="flex:0 0 auto;width:auto;padding:10px 16px">⛱ Lampu</button>
+    </div>
+  </div>
+
+  <!-- Live Area (for Detail mode, hidden by default) -->
+  <div id="liveArea" class="live-area" style="display:none">
+    <div class="live-hint" id="liveHint" style="text-align:center;padding:40px 20px;color:var(--text2);font-size:14px;line-height:1.6">
+      <span style="font-size:48px;display:block;margin-bottom:12px">📡</span>
+      Cari barang langsung dari server GP45<br>
+      <span style="font-size:12px;color:var(--text2);margin-top:4px;display:block">Tampilkan stok semua outlet</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-section" id="loadingSection">
+    <div class="spinner"></div>
+    <div class="text" id="loadingText">Loading database...</div>
+    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    <div class="sub" id="loadingSub"></div>
+  </div>
+</div>
+
+<!-- OMSET Overlay -->
+<div class="omset-overlay" id="omsetOverlay">
+  <div class="omset-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:18px;margin:0">📈 OMSET</h3>
+      <button onclick="closeOmset()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text2)">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 10px">Total penjualan per sales per hari</p>
+    <input type="date" class="omset-date" id="omsetDate">
+        <div class="omset-tab">
+      <button id="omsetTabBtn" onclick="loadOmset()" class="active">📊 Harian</button>
+      <button id="omsetBulanBtn" onclick="loadOmsetBulan()">📅 Bulan Ini</button>
+      <button onclick="showOmsetSetting()">⚙ Setting</button>
+    </div>
+    <div id="omsetResult"></div>
+    <div id="omsetBulanResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- About Overlay -->
+<div class="about-overlay" id="aboutOverlay">
+  <div class="about-panel">
+    <div class="about-header">
+      <div style="font-size:40px;margin-bottom:8px">🏪</div>
+      <div style="font-size:20px;font-weight:800">GP45 DB</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px">v1.1.0</div>
+    </div>
+    <div class="about-body">
+      <div class="about-section">
+        <div class="about-section-title">📋 Info</div>
+        <div class="about-row"><span>Aplikasi</span><span>GP45 DB</span></div>
+        <div class="about-row"><span>Versi</span><span>1.1.0</span></div>
+        <div class="about-row"><span>Database</span><span id="aboutDbCount">- item</span></div>
+        <div class="about-row"><span>Mode</span><span>OFFLINE · ONLINE · RELAY</span></div>
+        <div class="about-row"><span>Creator</span><span>moors pangalila</span></div>
+      </div>
+      <div class="about-section">
+        <div class="about-section-title">📌 Riwayat Update</div>
+        <div class="about-changelog">
+          <span style="font-weight:700;color:var(--primary)">v1.1.0</span> — Setting Server IP<br>      • Menu baru "Setting Server" — ganti alamat IP server tanpa edit kode<br>      • Semua fitur (sync, Price Card, Omset) sekarang pakai IP yang sama, bisa diganti kapan saja<br>      • Tombol test koneksi langsung di halaman setting<br>      <br>      <span style="font-weight:700;color:var(--primary)">v1.0.0</span> — GP45 DB Edition<br>
+      • Database 41.101 item + outlet stock 35.314 item (bawaan)<br>
+      • Semua fitur dari ULTIMATE Edition tetap dipertahankan<br>
+      <br>
+      <span style="font-weight:700;color:var(--primary)">v4.11.0</span> — 3-Source Branch Stock Card<br>
+      • 📦 Offline: data outlet stock tersimpan dari sync terakhir<br>
+      • 🌐 Server 200: fetch live + otomatis simpan offline<br>
+      • 📡 Relay: cadangan kalo server 200 gagal<br>
+      • Tiga sumber beda card, loading masing-masing<br>
+      <br>
+      <span style="font-weight:700;color:var(--primary)">v4.10.0</span> — Tap to Focus + Focus Ring<br>
+      • Tap di layar scanner buat trigger autofokus ulang<br>
+      • Animasi focus ring (lingkaran putih) muncul di titik tap<br>
+      • Fokus balik ke continuous setelah 1.5 detik<br>
+      • Default pakai continuous (tanpa near biar natural)<br>
+      <br>
+          <span style="font-weight:700;color:var(--primary)">v4.9.0</span> — Scanner Fix: FPS Turun, Res Naik, Focus Continuous<br>      • FPS 15 → 8 biar tiap frame lebih terang & kurang noise<br>      • Resolusi 640×480 → 1280×720 biar detail bar barcode lebih kebaca<br>      • Tambah focusMode continuous biar kamera auto fokus<br>      • Fix: barcode CODE-128 tipis & bengkok lebih gampang terdeteksi<br>      <br>
+          <span style="font-weight:700;color:var(--primary)">v4.8.0</span> — Scanner Cepat + Remove QR<br>      • FPS 5 → 15 biar scan lebih responsif dan cepat<br>      • Hapus QR_CODE (gak dipake di toko)<br>      • Hapus qrbox (cuma buat QR)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.1</span> — Torch Fix - native API<br>      • Torch sekarang pake native MediaStreamTrack API biar bisa nyala<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.0</span> — Orange Theme + Torch + Scanner Overlay<br>      • Ganti semua warna merah jadi orange (header, tombol, harga, dll)<br>      • Tombol Flashlight/Lampu di scanner (nyala/mati)<br>      • Scanner pindah ke overlay panel (gak ganggu halaman)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.6.0</span> — 3-Button Lantai Setting + Scanner Beep<br>      • Setting lantai pake 3 tombol langsung (L1 | L2 | Nonaktif)<br>      • Scanner tambah beep & vibrate biar tau scan berhasil<br>      • Perbaiki layout omset percentage pake badge box<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.5.0</span> — Scanner Fix Lag + All Barcode Format<br>      • Camera FPS turun 5 biar ringan di HP<br>      • Resolusi kamera 640x480 biar gak lag<br>      • Barcode formats lengkap: CODE_128, CODE_39, EAN_13, EAN_8, UPC_A, UPC_E, QR<br>      • facingMode environment (tanpa exact) biar kompatibel semua device<br>      • Hapus torch & fallback yang bikin ribet<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.4.0</span>nel<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.2.0</span> — Fix Omset Detail Click Bug<br>      • Perbaiki bug klik detail sales hapus row lain<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.1.0</span> — Omset Code Cleanup<br>      • Hapus dead code renderOmset + tryJson<br>      • Bersihin duplicate render logic<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.0.0</span> — STABLE: Price Card fix + Detail Panel overlay + ULTIMATE badge<br>      • Price Card crash fix (findIndex + .finally compatibility)<br>      • Detail Price Card pake overlay panel sendiri<br>      • Badge ULTIMATE di icon original<br>      • Package: moorspangalila.ultimate.fresh (test)<br>      <br>      <span style="font-weight:700;color:var(--primary)">v3.2.0</span> — Search Icon + Harga Hero + Bersihin Code<br>
+          • 🔍 Search icon tetap di kiri, hapus emoji placeholder<br>
+          • Harga hero 52px bold 900, tanpa label Harga Jual/per item<br>
+          • Hapus SKU line di card (nama lebih gede)<br>
+          • Hapus tombol 📦 Offline hidden + dead code<br>
+          • Manual pindah ke setelah izin kamera<br>
+          • Fix: toast pas copy nama+harga
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v3.1.1</span> — Copy Nama+Harga + Cancel Sync<br>
+          • Tombol 📋 copy nama + harga (semua tab)<br>
+          • Tombol ✕ Batal pas sync (pake AbortController)<br>
+          • Dark mode: about, manual, stock.low, price-section, toast fix<br>
+          • Tombol sync proper styling (global .sync-btn)<br>
+          • Fix: resetSyncOverlay + saveToIndexedDB kehapus<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v3.1.0</span> — Search History + Price Card<br>
+          • Price Card - Buat & kelola price card langsung dari HP<br>
+          • Riwayat pencarian otomatis<br>
+          • Search mode barcode & nama<br>
+          • Tema dark mode<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.8</span> — Sync overlay panel + GP45 stock fix<br>
+          • Riwayat sync pindah ke panel overlay (bisa di-scroll)<br>
+          • Stok GP45 (Home & Living) muncul di semua tab<br>
+          • Stok per cabang lengkap + total semua<br>
+          • Info database + umur data di tab OFFLINE<br>
+          • Fix: `searchTimeoutId` error di fungsi lain<br>
+          • Fix: AbortSignal.timeout → AbortController (Android lama)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.7</span> — Detail sync + history<br>
+          • Detail item yg berubah (harga & stok) setelah sync<br>
+          • Riwayat sync tersimpan di localStorage<br>
+          • Badge umur database (🟢 🟡 🔴)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.6</span> — Database baru + RELAY detail<br>
+          • Database 41.162 item (Aktif saja) dari server 200<br>
+          • Big Price + Stok Cabang di tab RELAY<br>
+          • Fix: nested object stok_cabang (relay API)<br>
+          • Ukuran APK lebih ringan (1.6 MB)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.5</span> — RELAY tab + sync<br>
+          • Tab RELAY — akses dari luar via Cloudflare Worker<br>
+          • Sync langsung ke server 200 (tanpa Flask)<br>
+          • Big Price + Info Grid + Stok Cabang di semua tab<br>
+          • Detail perbandingan data pas sync<br>
+          • Scanner barcode di header<br>
+          • Debug log + manual built-in
+        </div>
+      </div>
+      <div class="about-section">
+        <div class="about-section-title">🔄 Sync Data</div>
+        <div class="about-changelog" style="font-size:11px">
+          Sync akan membandingkan data offline dengan data terbaru dari server.
+          Jika ada perubahan harga/stok, kamu bisa memilih untuk update atau tidak.
+          Membutuhkan koneksi ke server internal.
+        </div>
+      </div>
+    </div>
+    <button class="about-close-btn" onclick="closeAbout()">✕ Tutup</button>
+  </div>
+</div>
+
+<!-- Settings Overlay -->
+<div class="about-overlay" id="settingsOverlay">
+  <div class="about-panel" style="max-width:340px">
+    <div class="about-header" style="background:var(--accent)">
+      <div style="font-size:32px;margin-bottom:6px">⚙️</div>
+      <div style="font-size:18px;font-weight:800">Setting Server</div>
+    </div>
+    <div class="about-body">
+      <div class="about-section">
+        <div class="about-section-title">🌐 Alamat Server (IP)</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Dipakai untuk sinkronisasi database, Price Card, dan Omset. Isi IP komputer/server toko di jaringan WiFi ini (contoh: 192.168.6.200).</div>
+        <input type="text" id="settingsServerIp" placeholder="192.168.6.200" autocomplete="off" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);box-sizing:border-box;margin-bottom:10px">
+        <div id="settingsSaveHint" style="font-size:11px;color:var(--text2);margin-bottom:12px;min-height:14px"></div>
+        <button class="about-close-btn" style="background:var(--accent);color:#fff;margin-bottom:8px" onclick="applySettingsServerIp()">💾 Simpan &amp; Test Koneksi</button>
+      </div>
+      <div class="about-section">
+        <div class="about-section-title">📡 Status</div>
+        <div id="settingsConnStatus" style="font-size:13px;color:var(--text2)">Belum dites</div>
+      </div>
+    </div>
+    <button class="about-close-btn" onclick="closeSettings()">✕ Tutup</button>
+  </div>
+</div>
+
+<!-- Manual Overlay -->
+<div class="manual-overlay" id="manualOverlay">
+  <div class="manual-panel">
+    <div class="manual-header">
+      <div style="font-size:32px;margin-bottom:4px">📖</div>
+      <div style="font-size:18px;font-weight:800">PANDUAN CEPAT</div>
+      <div style="font-size:11px;opacity:.7">GP45 DB v4.7.1 - Orange Theme + Torch Fix + Scanner Overlay</div>
+    </div>
+    <div class="manual-body">
+      <div class="manual-section">
+        <div class="manual-stitle">🔍 CARI BARANG</div>
+        <div class="manual-text">Ketik di kotak search. Cari pake nama atau barcode — otomatis detek. Multi-kata (AND): <i>wipro kunci sok 8</i>. Tap item untuk lihat detail harga, stok, & stok cabang.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📷 SCAN BARCODE</div>
+        <div class="manual-text">Tap ikon <b>📷</b> di pojok kiri header. Arahkan ke barcode. Hasil langsung tampil.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📋 OFFLINE · 🌐 ONLINE · 📡 RELAY</div>
+        <div class="manual-text"><b>OFFLINE</b> = data lokal HP. Cepet, gak pakai internet. <b>ONLINE</b> = langsung ke server 200 (butuh WiFi toko). <b>RELAY</b> = via Cloudflare, bisa dari luar toko.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📋 SALIN NAMA + HARGA</div>
+        <div class="manual-text">Tap tombol <b>📋</b> di detail barang. Otomatis copy <i>Nama Barang - RpXX.XXX</i> ke clipboard. Tinggal paste kirim ke customer.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">🔄 SYNC DATA</div>
+        <div class="manual-text">Menu ☰ → <b>Sync Data</b>. Update database offline dengan data terbaru dari server 200. Butuh koneksi WiFi ke jaringan toko. Bisa dibatalkan kalo salah pencet.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">💰 PRICE CARD</div>
+        <div class="manual-text">Menu ☰ → <b>Price Card</b>. Buat daftar barang untuk print label. Cari barang, set qty, simpan. Lihat & hapus di riwayat.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📈 OMSET</div>
+        <div class="manual-text">Menu ☰ → <b>Omset</b>. Lihat total penjualan per sales per hari. Tap nama sales untuk lihat barang yg dijual.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">🌙 DARK MODE</div>
+        <div class="manual-text">Menu ☰ → <b>Dark Mode</b>. Toggle tema gelap/terang. Tersimpan otomatis.</div>
+      </div>
+    </div>
+    <button class="manual-close-btn" onclick="closeManual()">✕ MENGERTI</button>
+  </div>
+</div>
+<!-- Price Card Overlay -->
+<div class="pc-overlay" id="pcOverlay">
+  <div class="pc-panel">
+    <div class="pc-header">
+      <h3>💰 Price Card</h3>
+      <button class="pc-close" onclick="closePriceCard()">✕</button>
+    </div>
+    <div class="pc-body">
+      <input type="text" class="pc-name" id="pcName" placeholder="Nama price card (contoh: LANTAI 2)" autocomplete="off">
+      <input type="text" class="pc-search" id="pcSearch" placeholder="🔍 Cari barang..." autocomplete="off">
+      <div class="pc-results" id="pcResults"></div>
+      <div class="pc-cart">
+        <div class="pc-cart-header">🛒 Cart (<span id="pcCartCount">0</span>)</div>
+        <div id="pcCartItems"><div style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Belum ada item</div></div>
+      </div>
+      <button class="pc-save-btn" id="pcSaveBtn" disabled onclick="savePriceCard()">📥 Simpan Price Card</button>
+      <div class="pc-history">
+        <div class="pc-history-title">📋 Riwayat Price Card</div>
+        <div id="pcHistoryList"><div style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Memuat...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+  <!-- Debug Log -->
+
+<script src="app.js"></script>
+<script src="pricecard.js"></script>
+<script src="server81.js"></script>
+<script src="scanner.js"></script>
+<script src="relay.js"></script>
