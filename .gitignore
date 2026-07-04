@@ -13,7 +13,7 @@ template/*.apk
 .DS_Store
 Thumbs.db
 
-# Data files (large JSON)
+# Large data files (download via sync)
 assets/data_*.json
 assets/data_outlet.json
 assets/html5-qrcode.min.js
