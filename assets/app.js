@@ -458,6 +458,20 @@ function showResult(item) {
     '<div class="price-section">' +
       '<div class="price-big"><span class="rp">Rp</span>' + Number(item.h || 0).toLocaleString('id-ID') + '</div>' +
     '</div>' +
+    // HK section (only if hk > 0)
+    (item.hk && item.hk > 0 ? 
+      '<div class="hk-section">' +
+        '<button class="hk-toggle" onclick="toggleHKPanel(this)">' +
+          '<span class="hk-toggle-left"><span class="hk-badge">HK</span> <span>Rp' + Number(item.hk).toLocaleString('id-ID') + '</span></span>' +
+          '<span class="hk-arrow">▼</span>' +
+        '</button>' +
+        '<div class="hk-detail" style="display:none">' +
+          '<div class="hk-detail-row"><span class="hk-lbl">Harga HK</span><span class="hk-val hk-price">Rp' + Number(item.hk).toLocaleString('id-ID') + '</span></div>' +
+          '<div class="hk-detail-row"><span class="hk-lbl">Harga Reguler</span><span class="hk-val"><span class="hk-coret">Rp' + Number(item.h).toLocaleString('id-ID') + '</span></span></div>' +
+          '<div class="hk-detail-row"><span class="hk-lbl">Hemat</span><span class="hk-val" style="color:var(--green)">Rp' + Number(item.h - item.hk).toLocaleString('id-ID') + '</span></div>' +
+          '<div class="hk-detail-row"><span class="hk-lbl">Info</span><span class="hk-val" style="font-weight:400;font-size:11px;color:var(--text2)">Harga Khusus — hubungi kasir untuk validasi</span></div>' +
+        '</div>' +
+      '</div>' : '') +
     '<div class="stock-row ' + sc + '" style="margin:8px 0">' + sl + '</div>' +
     '<div class="detail-title">📋 ' + modeLabel + '</div>' +
     '<div class="info-grid">' + extras + '</div>' +
@@ -591,5 +605,17 @@ function showToast(msg) {
 // ════════════════════════════════════════
 // INIT - first launch manual moved to after camera permission
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// HK TOGGLE
+// ════════════════════════════════════════
+function toggleHKPanel(btn) {
+  var detail = btn.nextElementSibling;
+  if (!detail) return;
+  var isOpen = detail.style.display === 'block';
+  detail.style.display = isOpen ? 'none' : 'block';
+  var arrow = btn.querySelector('.hk-arrow');
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+}
+
 loadData();
 
