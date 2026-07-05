@@ -511,8 +511,21 @@ function escAttr(t) { return !t ? '' : String(t).replace(/[&"]/g, function(m) { 
 // MENU
 // ════════════════════════════════════════
 
-function toggleMenu() { document.getElementById('menuDropdown').classList.toggle('show'); }
-function closeMenu() { document.getElementById('menuDropdown').classList.remove('show'); }
+function toggleMenu() { 
+  var menu = document.getElementById('menuDropdown');
+  var isOpen = menu.classList.contains('show');
+  menu.classList.toggle('show');
+}
+function closeMenu() { 
+  document.getElementById('menuDropdown').classList.remove('show'); 
+}
+// Close menu when tapping outside
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('menuDropdown');
+  if (!menu.classList.contains('show')) return;
+  if (e.target.closest('.menu-dropdown') || e.target.closest('.menu-btn')) return;
+  menu.classList.remove('show');
+});
 
 // ════════════════════════════════════════
 // SETTINGS

@@ -1129,7 +1129,7 @@ function showBranchStock(containerId, item, kode) {
     } else if (item && item.q !== undefined) {
       // Fallback: show main stock from database
       var mainStok = {};
-      mainStok['GP45 (Pusat)'] = Number(item.q) || 0;
+      mainStok['GP45'] = Number(item.q) || 0;
       var h = renderOutletStockHTML(mainStok, Date.now());
       el.innerHTML = h || '<div class="bs-empty">Stok: ' + Number(item.q).toFixed(0) + '</div>';
       el.innerHTML += '<div style="font-size:9px;color:var(--text2);margin-top:4px">💡 Data outlet stock belum di-sync. Tampil stok pusat.</div>';
@@ -1218,26 +1218,25 @@ function loadOutletStockLocal(kode) {
 
 function renderOutletStockHTML(stocks, ts) {
   if (!stocks) return null;
-  var names = { 'GP45': 'GP45 (Pusat)' };
+  var names = { 'GP45': 'GP45', 'GH': 'GH', 'GHA': 'GHA', 'GHB': 'GHB', 'GHM': 'GHM', 'GP': 'GP', 'HO': 'HO', 'MCT': 'MCT' };
   var total = 0;
   var keys = Object.keys(stocks);
   if (keys.length === 0) return null;
   var h = '';
   if (keys.length > 1) {
-    h += '<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--text2)">📍 Stok Per Cabang</div>';
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i];
       var qty = Number(stocks[k]) || 0;
       total += qty;
-      var nm = names[k] || ('Outlet ' + k);
-      h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>' + nm + '</span><span style="font-weight:700;color:' + (qty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + qty.toFixed(0) + '</span></div>';
+      var nm = names[k] || k;
+      h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px"><span><b>' + nm + '</b></span><span style="font-weight:700;color:' + (qty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + qty.toFixed(0) + '</span></div>';
     }
-    h += '<div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;font-size:13px;font-weight:700;border-top:2px solid var(--primary);color:var(--text)"><span>📊 Total Semua</span><span style="color:var(--primary)">' + total.toFixed(0) + '</span></div>';
+    h += '<div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;font-size:13px;font-weight:700;border-top:2px solid var(--primary);color:var(--text)"><span>📊 Total</span><span style="color:var(--primary)">' + total.toFixed(0) + '</span></div>';
   } else {
     var k = keys[0];
-    var nm = names[k] || ('Outlet ' + k);
+    var nm = names[k] || k;
     total = Number(stocks[k]) || 0;
-    h += '<div style="margin-top:8px;font-size:13px;color:var(--text2);text-align:center">' + nm + ': <b>' + total.toFixed(0) + '</b></div>';
+    h += '<div style="font-size:12px;color:var(--text2);text-align:center"><b>' + nm + '</b>: <b>' + total.toFixed(0) + '</b></div>';
   }
   if (ts) {
     var diff = Math.floor((Date.now() - ts) / 1000);
