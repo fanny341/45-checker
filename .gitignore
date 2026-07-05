@@ -2,12 +2,19 @@
 output/
 *.idsig
 
-# Signed APKs in root (keep in output/)
+# Signed APKs in root
 GP45_*.apk
 GP45_BUILD_*.apk
 
 # Keystore
 keystore/
+
+# Backup directories
+assets_backup/
+
+# Generated/temp files
+classes.dex
+icon_mockup.html
 
 # OS files
 .DS_Store
