@@ -1218,7 +1218,7 @@ function loadOutletStockLocal(kode) {
 
 function renderOutletStockHTML(stocks, ts) {
   if (!stocks) return null;
-  var names = { 'GP45': 'GP45', 'GH': 'GH', 'GHA': 'GHA', 'GHB': 'GHB', 'GHM': 'GHM', 'GP': 'GP', 'HO': 'HO', 'MCT': 'MCT' };
+  var names = { 'GP45': 'GP45', 'GH': 'GH', 'GHA': 'GHA', 'GHB': 'GHB', 'GHM': 'GHM', 'GP': 'GP45', 'HO': 'HO', 'MCT': 'MCT' };
   var total = 0;
   var keys = Object.keys(stocks);
   if (keys.length === 0) return null;

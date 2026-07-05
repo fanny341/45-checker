@@ -207,6 +207,8 @@ function loadData()
         isLoading = false;
         input.disabled = false;
         input.focus();
+        // Auto-select OFFLINE mode after data loads
+        setMode('localdb');
       }, 400);
       return;
     }
