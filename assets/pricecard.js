@@ -1,6 +1,77 @@
 // GP45 - pricecard.js
 
 // ════════════════════════════════════════
+// SERVER IP (from sync panel)
+// ════════════════════════════════════════
+function saveSyncServerIp() {
+  var raw = document.getElementById('syncServerIp').value.trim();
+  if (!raw) { showToast('⚠️ Isi IP server dulu'); return; }
+  raw = raw.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+  var ip = raw.split(':')[0];
+  saveServerIP(ip);
+  var status = document.getElementById('syncPingStatus');
+  status.textContent = '⏳';
+  status.style.color = 'var(--text2)';
+  var controller = new AbortController();
+  var t = setTimeout(function() { controller.abort(); }, 8000);
+  var t0 = Date.now();
+  fetch(gpApi('sync'), { signal: controller.signal })
+    .then(function(r) {
+      clearTimeout(t);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var ms = Date.now() - t0;
+      status.textContent = '✅ ' + ms + 'ms';
+      status.style.color = 'var(--green)';
+      showToast('✅ Server: ' + ip + ' (' + ms + 'ms)');
+    })
+    .catch(function(err) {
+      clearTimeout(t);
+      status.textContent = err.name === 'AbortError' ? '❌ Timeout' : '❌ Gagal';
+      status.style.color = 'var(--primary)';
+    });
+}
+
+function saveHistServerIp() {
+  var raw = document.getElementById('histServerIp').value.trim();
+  if (!raw) { showToast('⚠️ Isi IP server dulu'); return; }
+  raw = raw.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+  var ip = raw.split(':')[0];
+  saveServerIP(ip);
+  var status = document.getElementById('histPingStatus');
+  status.textContent = '⏳';
+  status.style.color = 'var(--text2)';
+  var controller = new AbortController();
+  var t = setTimeout(function() { controller.abort(); }, 8000);
+  var t0 = Date.now();
+  fetch(gpApi('sync'), { signal: controller.signal })
+    .then(function(r) {
+      clearTimeout(t);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var ms = Date.now() - t0;
+      status.textContent = '✅ ' + ms + 'ms';
+      status.style.color = 'var(--green)';
+    })
+    .catch(function(err) {
+      clearTimeout(t);
+      status.textContent = err.name === 'AbortError' ? '❌ Timeout' : '❌ Gagal';
+      status.style.color = 'var(--primary)';
+    });
+}
+
+// Init server IP in sync panels
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var inp = document.getElementById('syncServerIp');
+    if (inp) { inp.value = getServerIP(); }
+    var hip = document.getElementById('histServerIp');
+    if (hip) { hip.value = getServerIP(); }
+  }, 100);
+});
+
+// Also listen for overlays opening to refresh IP
+var origShow = document.getElementById ? null : null;
+
+// ════════════════════════════════════════
 // PRICE CARD
 // ════════════════════════════════════════
 var pcCart = [];
@@ -616,25 +687,69 @@ function syncData() {
           document.getElementById('syncNewCount').textContent = newCount.toLocaleString();
           // Update status bar time
           updateLastUpdateDisplay();
-          document.getElementById('syncOldDate').textContent = lastUpdateStr;
           document.getElementById('syncNewDate').textContent = timeStr;
-          document.getElementById('syncSize').textContent = (oldCount * 170).toLocaleString() + ' KB → ' + (newCount * 228).toLocaleString() + ' KB';
-          document.getElementById('syncPriceChange').textContent = priceChanged + ' item';
-          document.getElementById('syncStockChange').textContent = stockChanged + ' item';
-          document.getElementById('syncAdded').textContent = added.length;
-          document.getElementById('syncRemoved').textContent = removed.length;
-          document.getElementById('syncKept').textContent = kept;
+          document.getElementById('syncPriceChange').textContent = priceChanged.toLocaleString();
+          document.getElementById('syncStockChange').textContent = stockChanged.toLocaleString();
+          document.getElementById('syncAdded').textContent = added.length.toLocaleString();
+          document.getElementById('syncRemoved').textContent = removed.length.toLocaleString();
+          document.getElementById('syncKept').textContent = kept.toLocaleString();
           
-          if (priceSamples.length > 0) {
-            document.getElementById('syncSampleChanges').style.display = 'block';
-            var html = '';
-            for (var i = 0; i < priceSamples.length; i++) {
-              var s = priceSamples[i];
-              var diff = s.nw - s.old;
-              html += '<div>' + s.n.substring(0, 40) + ': Rp' + Number(s.old).toLocaleString('id-ID') + ' → Rp' + Number(s.nw).toLocaleString('id-ID') + ' <span style="color:' + (diff > 0 ? '#d97706' : 'var(--green)') + '">(' + (diff > 0 ? '+' : '') + Number(diff).toLocaleString('id-ID') + ')</span></div>';
+          // Build detailed change list
+          var changesHtml = '';
+          // Show price changes
+          var allPriceChanges = [];
+          for (var i = 0; i < newKodes.length; i++) {
+            var k = newKodes[i];
+            if (oldByKode[k] && oldByKode[k].h !== newByKode[k].h) {
+              allPriceChanges.push({k: k, n: oldByKode[k].n, old: oldByKode[k].h, nw: newByKode[k].h});
             }
-            document.getElementById('syncSampleList').innerHTML = html;
           }
+          
+          changesHtml += '<div style="font-size:11px;font-weight:600;color:var(--text2);margin:4px 0">🏷️ Perubahan Harga (' + allPriceChanges.length + ')</div>';
+          if (allPriceChanges.length > 0) {
+            var shown = 0;
+            for (var i = 0; i < allPriceChanges.length && shown < 10; i++, shown++) {
+              var s = allPriceChanges[i];
+              var dir = s.nw > s.old ? '🟢' : '🔴';
+              var arrow = s.nw > s.old ? '▲' : '▼';
+              changesHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;font-size:10px;border-bottom:1px solid var(--border)">' +
+                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(s.n.substring(0, 28)) + '</span>' +
+                '<span style="font-weight:600;margin:0 4px;white-space:nowrap">Rp' + Number(s.old).toLocaleString('id-ID') + '</span>' +
+                '<span style="color:var(--text2)">→</span>' +
+                '<span style="font-weight:700;color:' + (s.nw > s.old ? 'var(--green)' : 'var(--primary)') + ';margin:0 4px;white-space:nowrap">Rp' + Number(s.nw).toLocaleString('id-ID') + '</span>' +
+                '<span style="font-size:9px">' + arrow + '</span></div>';
+            }
+            if (allPriceChanges.length > 10) {
+              changesHtml += '<div style="text-align:center;font-size:10px;color:var(--text2);padding:3px">+ ' + (allPriceChanges.length - 10) + ' perubahan lainnya...</div>';
+            }
+          } else {
+            changesHtml += '<div style="text-align:center;padding:6px;font-size:11px;color:var(--text2)">Tidak ada perubahan harga</div>';
+          }
+          
+          // Show new items
+          changesHtml += '<div style="font-size:11px;font-weight:600;color:var(--text2);margin:8px 0 4px">✨ Item Baru (' + added.length + ')</div>';
+          if (added.length > 0) {
+            var addedNames = [];
+            for (var i = 0; i < added.length && i < 8; i++) {
+              var k = added[i];
+              var it = newByKode[k];
+              changesHtml += '<div style="padding:3px 6px;font-size:10px;border-bottom:1px solid var(--border)">' +
+                esc(it.n.substring(0, 35)) + ' — <span style="font-weight:600">Rp' + Number(it.h).toLocaleString('id-ID') + '</span></div>';
+            }
+            if (added.length > 8) {
+              changesHtml += '<div style="text-align:center;font-size:10px;color:var(--text2);padding:3px">+ ' + (added.length - 8) + ' item baru lainnya...</div>';
+            }
+          }
+          
+          // Show removed items
+          if (removed.length > 0) {
+            changesHtml += '<div style="font-size:11px;font-weight:600;color:var(--primary);margin:8px 0 4px">❌ Item Hilang (' + removed.length + ')</div>';
+            for (var i = 0; i < removed.length && i < 5; i++) {
+              changesHtml += '<div style="padding:3px 6px;font-size:10px;color:var(--text2)">' + esc(removed[i]) + '</div>';
+            }
+          }
+          
+          document.getElementById('syncChangeList').innerHTML = changesHtml;
           
           // Start outlet stock sync (async, separate) with timeout
           (function() {
@@ -837,9 +952,22 @@ function openSyncHistory() {
   var content = document.getElementById('syncHistContent');
   if (!overlay || !content) return;
   overlay.style.display = 'flex';
+  
+  // Sync server IP input inline
+  var curIp = getServerIP();
+  
   var html = '';
   
-  // Sync button only (close is in header)
+  // Server IP row
+  html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:10px">' +
+    '<span style="font-size:12px;font-weight:600">🌐</span>' +
+    '<span style="font-size:12px;font-weight:600">IP:</span>' +
+    '<input type="text" id="histServerIp" value="' + escAttr(curIp) + '" autocomplete="off" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--text);min-width:0">' +
+    '<button onclick="saveHistServerIp()" style="padding:5px 8px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;cursor:pointer">Set</button>' +
+    '<span id="histPingStatus" style="font-size:10px;color:var(--text2)">🔍</span>' +
+    '</div>';
+  
+  // Sync button
   html += '<div style="margin-bottom:10px">' +
     '<button class="sync-btn" onclick="syncData();closeSyncHistory()" style="width:100%;padding:14px;font-size:15px;font-weight:800">🔄 Update Database</button>' +
     '</div>';
@@ -857,7 +985,7 @@ function openSyncHistory() {
   } else {
     html += '<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:10px;font-size:11px;display:flex;justify-content:space-between">' +
       '<span>📦 <b>' + (allItems.length || 0).toLocaleString() + '</b> item</span>' +
-      '<span style="color:var(--text2)">🕐 Belum sync</span>' +
+      '<span style="color:var(--text2)">🕐 Siap sync</span>' +
       '</div>';
   }
   

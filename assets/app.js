@@ -161,43 +161,6 @@ function saveServerIP(ip) {
   _serverIP = ip;
   showToast('✅ Server IP: ' + ip);
 }
-
-function showSettings() {
-  document.getElementById('settingsOverlay').classList.add('show');
-  document.getElementById('settingsServerIp').value = getServerIP();
-  document.getElementById('settingsSaveHint').textContent = '';
-  document.getElementById('settingsConnStatus').textContent = 'Belum dites';
-  document.getElementById('settingsConnStatus').style.color = 'var(--text2)';
-}
-function closeSettings() {
-  document.getElementById('settingsOverlay').classList.remove('show');
-}
-function applySettingsServerIp() {
-  var raw = document.getElementById('settingsServerIp').value.trim();
-  if (!raw) { document.getElementById('settingsSaveHint').textContent = '⚠️ Isi alamat IP dulu'; return; }
-  raw = raw.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
-  saveServerIP(raw);
-  document.getElementById('settingsSaveHint').textContent = '✅ Tersimpan: ' + raw;
-  var status = document.getElementById('settingsConnStatus');
-  status.textContent = '⏳ Menghubungi server...';
-  status.style.color = 'var(--text2)';
-  var controller = new AbortController();
-  var t = setTimeout(function() { controller.abort(); }, 8000);
-  var t0 = Date.now();
-  fetch(gpApi('sync'), { signal: controller.signal })
-    .then(function(r) {
-      clearTimeout(t);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      var ms = Date.now() - t0;
-      status.textContent = '✅ Terhubung (' + ms + 'ms)';
-      status.style.color = 'var(--green)';
-    })
-    .catch(function(err) {
-      clearTimeout(t);
-      status.textContent = err.name === 'AbortError' ? '❌ Timeout — server tidak merespon' : '❌ Gagal terhubung: ' + (err.message || 'unknown');
-      status.style.color = 'var(--primary)';
-    });
-}
 function gpApi(action, extra) {
   return 'http://' + getServerIP() + '/grand.php?key=123' + (action ? '&action=' + action : '') + (extra ? '&' + extra : '');
 }

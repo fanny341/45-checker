@@ -34,7 +34,6 @@
     <div class="menu-item" data-menu="about" onclick="closeMenu();showAbout()">ℹ About</div>
     <div class="menu-item" data-menu="manual" onclick="closeMenu();showManual()">📖 Manual</div>
     <div class="menu-item" data-menu="darkmode" onclick="closeMenu();toggleTheme()">🎨 Dark Mode</div>
-    <div class="menu-item" data-menu="settings" onclick="closeMenu();showSettings()">⚙️ Setting Server</div>
       </div>
 
   <!-- Mode Toggle -->
@@ -77,6 +76,13 @@
   <!-- Sync Overlay -->
   <div class="sync-overlay" id="syncOverlay">
     <div class="sync-panel" id="syncPanel">
+      <!-- Server IP row (always visible) -->
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;white-space:nowrap">🌐 Server</span>
+        <input type="text" id="syncServerIp" placeholder="192.168.6.200" autocomplete="off" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);min-width:0">
+        <span id="syncPingStatus" style="font-size:11px;color:var(--text2);white-space:nowrap"></span>
+        <button onclick="saveSyncServerIp()" style="padding:7px 10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Set</button>
+      </div>
       <div id="syncLoading">
         <div class="spinner"></div>
         <div id="syncTitle" style="font-size:16px;font-weight:700;margin:8px 0 4px">Sync Database</div>
@@ -87,19 +93,60 @@
         <button onclick="cancelSync()" id="syncCancelBtn" style="width:100%;padding:10px;margin-top:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">✕ Batal</button>
       </div>
       <div id="syncResult" style="display:none;text-align:left">
-        <div style="font-size:40px;margin-bottom:4px" id="syncIcon">✅</div>
-        <div style="font-size:16px;font-weight:700">Sinkron Berhasil!</div>
-        <div class="stat" style="margin-top:8px">📦 Items: <span id="syncOldCount">0</span> → <span id="syncNewCount">0</span></div>
-        <div class="stat">🕐 Update: <span id="syncOldDate">-</span> → <span id="syncNewDate">-</span></div>
-        <div class="stat">📊 Size: <span id="syncSize">-</span></div>
-        <div class="stat">🏷️ Harga berubah: <span id="syncPriceChange">0</span></div>
-        <div class="stat">📦 Stok berubah: <span id="syncStockChange">0</span></div>
-        <div class="stat">✨ Baru: <span id="syncAdded">0</span></div>
-        <div class="stat">❌ Hilang: <span id="syncRemoved">0</span></div>
-        <div class="stat">📋 Sama: <span id="syncKept">0</span></div>
-        <div id="syncSampleChanges" style="display:none;margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;font-size:11px">
-          <div style="font-weight:600;margin-bottom:4px">🏷️ Contoh perubahan harga:</div>
-          <div id="syncSampleList"></div>
+        <div style="text-align:center;padding:8px 0 12px">
+          <div style="font-size:40px;margin-bottom:4px" id="syncIcon">✅</div>
+          <div style="font-size:16px;font-weight:700">Sinkron Berhasil!</div>
+        </div>
+        
+        <!-- Summary cards row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+          <div style="background:var(--green-bg);padding:10px;border-radius:10px;text-align:center">
+            <div style="font-size:10px;color:var(--green);font-weight:600">SEBELUM</div>
+            <div style="font-size:18px;font-weight:800;color:var(--text)" id="syncOldCount">0</div>
+            <div style="font-size:10px;color:var(--text2)">items</div>
+          </div>
+          <div style="background:var(--card);padding:10px;border-radius:10px;text-align:center;border:2px solid var(--accent)">
+            <div style="font-size:10px;color:var(--accent);font-weight:600">SESUDAH</div>
+            <div style="font-size:18px;font-weight:800;color:var(--accent)" id="syncNewCount">0</div>
+            <div style="font-size:10px;color:var(--text2)">items</div>
+          </div>
+        </div>
+        
+        <!-- Comparison stats -->
+        <div style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center">
+            <div>
+              <div style="font-size:9px;color:var(--text2)">✨ BARU</div>
+              <div style="font-size:16px;font-weight:800;color:var(--green)" id="syncAdded">0</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text2)">🏷️ HARGA</div>
+              <div style="font-size:16px;font-weight:800;color:#d97706" id="syncPriceChange">0</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text2)">❌ HILANG</div>
+              <div style="font-size:16px;font-weight:800;color:var(--primary)" id="syncRemoved">0</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <div>
+              <div style="font-size:9px;color:var(--text2)">📦 STOK</div>
+              <div style="font-size:13px;font-weight:700" id="syncStockChange">0</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text2)">📋 SAMA</div>
+              <div style="font-size:13px;font-weight:700" id="syncKept">0</div>
+            </div>
+            <div>
+              <div style="font-size:9px;color:var(--text2)">🕐 UPDATE</div>
+              <div style="font-size:11px;font-weight:700" id="syncNewDate">-</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Scrollable detailed changes -->
+        <div style="max-height:180px;overflow-y:auto;margin-bottom:8px" id="syncChangeList">
+          <div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">Memuat detail perubahan...</div>
         </div>
       </div>
       <div id="syncError" style="display:none">
@@ -235,30 +282,6 @@
       </div>
     </div>
     <button class="about-close-btn" onclick="closeAbout()">✕ Tutup</button>
-  </div>
-</div>
-
-<!-- Settings Overlay -->
-<div class="about-overlay" id="settingsOverlay">
-  <div class="about-panel" style="max-width:340px">
-    <div class="about-header" style="background:var(--accent)">
-      <div style="font-size:32px;margin-bottom:6px">⚙️</div>
-      <div style="font-size:18px;font-weight:800">Setting Server</div>
-    </div>
-    <div class="about-body">
-      <div class="about-section">
-        <div class="about-section-title">🌐 Alamat Server (IP)</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Dipakai untuk sinkronisasi database, Price Card, dan Omset. Isi IP komputer/server toko di jaringan WiFi lokal.</div>
-        <input type="text" id="settingsServerIp" placeholder="192.168.6.200" autocomplete="off" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);box-sizing:border-box">
-        <div id="settingsSaveHint" style="font-size:11px;color:var(--text2);margin-bottom:12px;min-height:14px"></div>
-        <button class="about-close-btn" style="background:var(--accent);color:#fff;margin-bottom:8px" onclick="applySettingsServerIp()">💾 Simpan &amp; Test Koneksi</button>
-      </div>
-      <div class="about-section">
-        <div class="about-section-title">📡 Status</div>
-        <div id="settingsConnStatus" style="font-size:13px;color:var(--text2)">Belum dites</div>
-      </div>
-    </div>
-    <button class="about-close-btn" onclick="closeSettings()">✕ Tutup</button>
   </div>
 </div>
 

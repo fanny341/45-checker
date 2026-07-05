@@ -1,0 +1,3529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>GP45 DB v1.0.0 - Bundled Outlet Stock</title>
+<script src="html5-qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f1f3f6;
+  --card:#fff;
+  --card-shadow:0 2px 12px rgba(0,0,0,.08);
+  --text:#1a1a2e;
+  --text2:#6b7280;
+  --border:#e5e7eb;
+  --primary:#dc2626;
+  --primary-dark:#991b1b;
+  --green:#16a34a;
+  --green-bg:#dcfce7;
+  --red-bg:#fff7ed;
+  --accent:#2563eb;
+}
+body.dark{--bg:#0f172a;--card:#1e293b;--card-shadow:0 2px 12px rgba(0,0,0,.3);--text:#f1f5f9;--text2:#94a3b8;--border:#334155;--primary:#ef4444;--primary-dark:#7f1d1d;--green:#22c55e;--green-bg:#14532d;--red-bg:#7f1d1d;--accent:#3b82f6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.container{max-width:480px;margin:0 auto;padding:0;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Menu ── */
+.menu-btn{background:none;border:none;color:#fff;font-size:28px;cursor:pointer;padding:8px 12px;opacity:.9;line-height:1;border-radius:8px}
+.menu-btn:active{opacity:1}
+.menu-dropdown{display:none;position:absolute;top:64px;right:12px;background:var(--card);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;overflow:hidden;min-width:220px;border:1px solid var(--border)}
+.menu-dropdown.show{display:block}
+.menu-item{padding:16px 20px;font-size:16px;cursor:pointer;color:var(--text);border-bottom:1px solid var(--border);font-weight:500;-webkit-tap-highlight-color:transparent}
+.menu-item:last-child{border:none}
+.menu-item:active{background:var(--border);transform:scale(.98)}
+
+/* ── PRICE CARD ── */
+.pc-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:flex-start;padding:16px;overflow-y:auto}
+.pc-overlay.show{display:flex}
+.pc-panel{background:var(--card);border-radius:24px;padding:20px;width:100%;max-width:500px;margin:10px auto;box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+.pc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pc-header h3{margin:0;font-size:18px}
+.pc-close{background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text2)}
+.pc-body{display:flex;flex-direction:column;gap:10px}
+.pc-name,.pc-search{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box}
+.pc-results{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;display:none}
+.pc-result-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+.pc-result-item:active{background:var(--bg)}
+.pc-result-item .info{flex:1;overflow:hidden}
+.pc-result-item .info .name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-result-item .info .sub{font-size:11px;color:var(--text2)}
+.pc-add-btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0}
+.pc-add-btn:active{transform:scale(.95)}
+.pc-cart{border:1px solid var(--border);border-radius:10px;padding:10px}
+.pc-cart-header{font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.pc-cart-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.pc-cart-item .info{flex:1}
+.pc-cart-item .info .name{font-weight:500}
+.pc-cart-item .info .sub{color:var(--text2);font-size:11px}
+.pc-rm-btn{background:none;border:none;color:var(--primary);font-size:18px;cursor:pointer;padding:4px 10px}
+.pc-save-btn{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.pc-save-btn:disabled{opacity:.5;cursor:not-allowed}.pc-qty-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);font-weight:700}.pc-qty-btn:active{background:var(--border)}.pc-confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px}.pc-confirm-panel{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}.pc-cancel-btn{flex:1;padding:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}.pc-confirm-btn{flex:1;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}.pc-del-btn{flex:1;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.pc-history{margin-top:8px}
+.pc-history-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.pc-history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer}
+.pc-history-item:active{background:var(--bg)}
+.pc-history-item .info{flex:1}
+.pc-history-item .info .name{font-weight:500}
+.pc-history-item .info .sub{color:var(--text2);font-size:11px}
+.pc-history-item .del-btn{background:none;border:none;color:var(--primary);font-size:14px;cursor:pointer;padding:2px 6px}
+/* ── OMSET ── */
+.omset-section{margin-top:16px;border-top:1px solid var(--border);padding-top:12px}
+.omset-section h3{font-size:14px;margin-bottom:2px}
+.omset-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);font-size:15px;min-height:44px;position:relative;overflow:hidden}
+.omset-row .name{font-weight:500}
+.omset-row .value{font-weight:700;color:var(--green)}
+.omset-total{display:flex;justify-content:space-between;padding:12px 0;font-size:15px;font-weight:700;border-top:2px solid var(--primary);margin-top:6px}
+.omset-date{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin:6px 0;background:var(--bg);color:var(--text)}
+.omset-btn{padding:10px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin:4px 0;display:inline-flex;align-items:center;justify-content:center}
+.omset-btn:active{transform:scale(.98)}
+.omset-tab{display:flex;gap:6px;margin:8px 0}.omset-tab button{flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--text2);transition:all .2s}.omset-tab button.active{background:var(--primary);color:#fff;border-color:var(--primary)}.omset-tab button:active{transform:scale(.95)}
+/* ── OMSET Overlay ── */
+.omset-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;justify-content:center;align-items:center;padding:20px}
+.omset-overlay.show{display:flex}
+.omset-panel{background:var(--card);border-radius:24px;padding:24px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.2)}
+
+/* ── OMSET Lantai ── */
+.olantai-section{margin:12px 0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.olantai-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:14px;font-weight:700}
+.olantai-header.l1{background:var(--red-bg);color:var(--primary)}
+.olantai-header.l2{background:var(--green-bg);color:var(--green)}
+.olantai-progress{height:6px;background:var(--border);border-radius:3px;margin:0 14px 6px;overflow:hidden}
+.olantai-progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.olantai-progress-fill.l1{background:var(--primary)}
+.olantai-progress-fill.l2{background:var(--green)}
+.olantai-sales{padding:4px 14px}
+.olantai-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;min-height:44px}
+.olantai-row:last-child{border:none}
+.olantai-name{font-weight:500;flex:1}
+.olantai-value{font-weight:700;margin-right:4px}
+.olantai-persen{font-size:11px;color:var(--text2);min-width:48px;text-align:right}
+.olantai-bar-wrap{display:inline-flex;width:50px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;vertical-align:middle;margin:0 4px}
+.olantai-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+
+.olantai-subtotal{display:flex;justify-content:space-between;padding:6px 14px;font-size:13px;font-weight:600;border-top:1px dashed var(--border)}
+.olantai-subtotal .val{color:var(--green)}
+.olantai-grand{display:flex;justify-content:space-between;padding:10px 14px;font-size:14px;font-weight:700;border-top:2px solid var(--primary);margin-top:4px}
+.olantai-grand .val{color:var(--primary)}
+.olantai-none{text-align:center;padding:12px;font-size:12px;color:var(--text2)}
+.olantai-badge{display:inline-block;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px;vertical-align:middle}
+.olantai-badge.l1{background:var(--red-bg);color:var(--primary)}
+.olantai-badge.l2{background:var(--green-bg);color:var(--green)}
+/* ── OMSET Settings ── */
+.oset-setting-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1002;justify-content:center;align-items:center;padding:16px}
+.oset-setting-overlay.show{display:flex}
+.oset-setting-panel{background:var(--card);border-radius:20px;padding:20px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.2)}
+.oset-target-row{display:flex;gap:8px;margin:8px 0}
+.oset-target-row input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text)}
+.oset-bulk-btns{display:flex;gap:6px;margin:8px 0}
+.oset-bulk-btn{flex:1;padding:8px 10px;border:2px solid;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
+.oset-bulk-btn:active{transform:scale(.95)}
+.oset-sales-list{display:flex;flex-direction:column;gap:4px;margin:8px 0;max-height:300px;overflow-y:auto}
+.oset-sale-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;min-height:48px;background:var(--card)}
+.oset-name{font-weight:600;flex:1;font-size:14px;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oset-btn-group{display:flex;gap:4px;flex-shrink:0}
+.oset-btn{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--text2);-webkit-tap-highlight-color:transparent;transition:all .15s;line-height:1;min-width:32px;text-align:center}
+.oset-btn:active{transform:scale(.88)}
+.oset-btn.al1{background:var(--primary);color:#fff;border-color:var(--primary)}
+.oset-btn.al2{background:#16a34a;color:#fff;border-color:#16a34a}
+.oset-btn.aina{background:var(--text2);color:#fff;border-color:var(--text2)}
+
+/* ── Sync ── */
+.sync-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;justify-content:center;align-items:center;padding:20px}
+.sync-overlay.show{display:flex}
+.about-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;justify-content:center;align-items:center;padding:20px}
+.about-overlay.show{display:flex}
+.about-panel{background:var(--card);border-radius:20px;width:100%;max-width:380px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:aboutIn .3s ease}
+@keyframes aboutIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.about-header{text-align:center;padding:24px 20px 16px;background:#dc2626;color:#fff;border-radius:20px 20px 0 0}
+.about-body{padding:16px 20px;flex:1;overflow-y:auto}
+.about-section{margin-bottom:16px}
+.about-section-title{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.about-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.about-row span:first-child{color:var(--text2)}
+.about-row span:last-child{font-weight:600;color:var(--text)}
+.about-changelog{font-size:12px;color:var(--text);line-height:1.8;padding:6px 0}
+.about-close-btn{width:100%;padding:14px;background:var(--bg);color:var(--text);border:none;border-radius:0 0 20px 20px;font-size:15px;font-weight:600;cursor:pointer;flex-shrink:0}
+.about-close-btn:active{background:var(--border)}
+.manual-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1002;justify-content:center;align-items:center;padding:16px}
+.manual-overlay.show{display:flex}
+.manual-panel{background:var(--card);border-radius:20px;width:100%;max-width:400px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:aboutIn .3s ease}
+.manual-header{text-align:center;padding:20px 20px 14px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border-radius:20px 20px 0 0}
+.manual-body{padding:12px 16px;flex:1;overflow-y:auto}
+.manual-section{margin-bottom:10px;padding:10px 12px;background:var(--card);border-radius:10px;border-left:3px solid var(--primary)}
+.manual-stitle{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+.manual-text{font-size:12px;color:var(--text);line-height:1.6}
+.manual-close-btn{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:0 0 20px 20px;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0}
+.manual-close-btn:active{background:var(--primary-dark)}
+.sync-panel{background:var(--card);border-radius:16px;padding:24px;width:100%;max-width:360px;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.2)}
+.sync-panel .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+.sync-panel .stat{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* ── Header ── */
+.header{background:#dc2626;color:#fff;padding:14px 12px 10px;text-align:center}
+.header-scanner{width:50px;height:50px;border-radius:14px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;animation:scanPulse 2s ease-in-out infinite;backdrop-filter:blur(4px)}
+.header-scanner:active{transform:scale(.88);background:rgba(255,255,255,.35)}
+.header-scanner-icon{width:32px;height:32px;border-radius:8px;object-fit:cover}
+.header h1{font-size:20px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.header .sub{font-size:10px;opacity:.7;margin-top:0;letter-spacing:.3px;text-transform:uppercase}
+@keyframes scanPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.2)}50%{box-shadow:0 0 0 8px rgba(255,255,255,.05);background:rgba(255,255,255,.28)}}
+
+/* ── Mode Toggle ── */
+.mode-bar{display:flex;background:var(--bg);padding:6px 16px;gap:8px;border-bottom:1px solid var(--border)}
+.mode-btn{flex:1;padding:8px 0;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--text2);transition:all .2s}
+.mode-btn.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(234,88,12,.3)}
+.mode-btn:active{transform:scale(.95)}
+
+/* ── Live Mode Bar ── */
+.live-bar{display:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:6px 16px;font-size:12px;font-weight:600;text-align:center;letter-spacing:.5px}
+
+/* ── Status ── */
+.status-bar{display:flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;color:var(--text2);background:var(--bg);border-bottom:1px solid var(--border)}
+.status-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.status-bar .count{margin-left:auto;font-weight:500}
+
+/* ── Search ── */
+.search-section{padding:16px;background:var(--card);position:relative}
+.search-wrap{position:relative}
+.search-wrap input{width:100%;padding:18px 48px 18px 18px;font-size:20px;border:2px solid var(--border);border-radius:18px;outline:none;background:var(--bg);color:var(--text);transition:all .2s;min-height:56px}
+.search-wrap input:focus{border-color:var(--primary);background:var(--card);box-shadow:0 0 0 4px rgba(234,88,12,.08)}
+
+.search-wrap .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--bg);border:none;font-size:16px;color:var(--text2);cursor:pointer;display:none;width:32px;height:32px;border-radius:50%;display:none;align-items:center;justify-content:center;line-height:1}
+.search-wrap .clear-btn.show{display:flex}
+
+/* ── Suggestions ── */
+.suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:50vh;overflow-y:auto;display:none;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.suggestions.show{display:block}
+.suggestions .item{padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;min-height:54px}
+.suggestions .item:active{background:var(--border)}
+.suggestions .item .info{flex:1;min-width:0}
+.suggestions .item .name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggestions .item .bcode{font-size:10px;color:var(--text2);margin-top:1px}
+.suggestions .item .price{font-weight:700;color:var(--primary);font-size:16px;white-space:nowrap}
+.suggestions .item .stock{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.suggestions .item .stock.avail{background:var(--green-bg);color:var(--green)}
+.suggestions .item .stock.low{background:#fef3c7;color:#d97706}
+body.dark .suggestions .item .stock.low{background:#78350f;color:#fbbf24}
+.suggestions .item .stock.empty{background:var(--red-bg);color:var(--primary)}
+.no-results{padding:24px;text-align:center;color:var(--text2);font-size:13px}
+
+/* ── Result Card ── */
+.result-card{display:none;background:var(--card);margin:12px 16px;border-radius:16px;padding:20px;box-shadow:var(--card-shadow);animation:fadeIn .25s ease}
+.result-card.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-card .name{font-size:16px;font-weight:600;margin-bottom:2px;line-height:1.3}
+.result-card .sku{font-size:12px;color:var(--text2);margin-bottom:12px}
+.result-card .sku span{background:var(--bg);padding:2px 8px;border-radius:4px;margin-right:4px}
+
+/* BIG PRICE */
+.result-card .price-section{text-align:center;padding:20px 0;margin:8px 0 12px;background:var(--card);border-radius:16px;box-shadow:0 0 0 1px var(--border),0 2px 8px rgba(234,88,12,.08)}
+body.dark .result-card .price-section{background:var(--card);box-shadow:0 0 0 1px var(--border),0 2px 12px rgba(234,88,12,.15)}
+.result-card .price-big{font-size:52px;font-weight:900;color:var(--primary);line-height:1.1;padding:4px 0;cursor:pointer}
+.result-card .price-big .rp{font-size:24px;font-weight:700}
+
+/* Stock */
+.result-card .stock-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;margin-bottom:12px;border-radius:10px;font-size:14px;font-weight:700}
+.result-card .stock-row.avail{background:var(--green-bg);color:var(--green)}
+.result-card .stock-row.empty{background:var(--red-bg);color:var(--primary)}
+
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.info-grid .cell{background:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+.info-grid .cell .lbl{color:var(--text2);font-size:11px;white-space:nowrap}
+.info-grid .cell .val{font-weight:700;color:var(--text);font-size:12px}
+.info-grid .cell.full{grid-column:1/-1}
+
+/* Detail grid (for live results) */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.detail-grid .cell{background:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+.detail-grid .cell .lbl{color:var(--text2);font-size:11px;white-space:nowrap}
+.detail-grid .cell .val{font-weight:700;color:var(--text);font-size:12px}
+.detail-grid .cell.full{grid-column:1/-1}
+.detail-title{font-size:13px;font-weight:600;margin:10px 0 4px;color:var(--text2)}
+.live-tag{background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;margin-left:4px}
+
+/* ── Live Results ── */
+.live-area{padding:0 16px 12px;flex:1}
+.live-item{background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;display:flex;gap:10px;align-items:center}
+.live-item:active{transform:scale(.98);background:var(--border)}
+.live-item .info{flex:1;min-width:0}
+.live-item .name{font-size:13px;font-weight:500}
+.live-item .bcode{font-size:10px;color:var(--text2);margin-top:1px}
+.live-item .price{font-weight:700;color:var(--primary);font-size:14px;white-space:nowrap}
+.live-item .stock{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;background:var(--green-bg);color:var(--green)}
+.live-item .stock.empty{background:var(--red-bg);color:var(--primary)}
+.live-loading{text-align:center;padding:32px;color:var(--text2);font-size:13px}
+.live-loading .spin{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+.live-error{text-align:center;padding:32px;color:var(--primary);font-size:13px;background:#fff7ed;margin:12px 16px;border-radius:12px}
+.back-btn{display:block;width:100%;padding:10px;background:var(--bg);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;font-weight:500;margin-bottom:10px;text-align:center}
+.back-btn:active{background:var(--border)}
+
+/* ── Loading ── */
+.loading-section{display:none;padding:8px 16px;color:var(--text2);background:var(--card);border-bottom:1px solid var(--border);flex-direction:row;align-items:center;gap:8px;font-size:12px}
+.loading-section .spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;margin:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;flex-shrink:0}
+.loading-section .text{font-size:12px;flex:1}
+.progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 8px;overflow:hidden}
+.progress-bar .fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s;width:0%}
+.loading-section .sub{font-size:11px;flex-shrink:0}
+
+/* ── Scanner ── */
+#scannerContainer{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1100;justify-content:center;align-items:center;padding:20px}
+#scannerContainer.show{display:flex;flex-direction:column}
+#scannerElement{width:100%;max-width:400px;border-radius:16px;background:#000;position:relative;min-height:240px;overflow:hidden}
+#scannerElement video{width:100%!important;height:auto!important;max-height:100%;object-fit:contain}
+.focus-ring{position:absolute;width:60px;height:60px;border:2px solid #fff;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);animation:focusPulse 0.5s ease-out;z-index:10}
+@keyframes focusPulse{0%{width:80px;height:80px;opacity:1}100%{width:50px;height:50px;opacity:0}}
+.scan-close{padding:12px 20px;background:var(--card);color:var(--text);border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;flex:1}
+.scan-close:active{transform:scale(.97)}
+.scan-torch{padding:12px 20px;background:var(--card);color:var(--text);border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;flex:0 0 auto}
+.scan-torch:active{transform:scale(.97)}
+.scan-torch.on{background:var(--primary);color:#fff}
+
+/* ── Fab Scanner ── */
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--text);padding:10px 20px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.toast.show{opacity:1}
+body.dark .toast{border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+
+.search-mode-btn{transition:all .2s;outline:none;-webkit-tap-highlight-color:transparent}
+.search-mode-btn:active{transform:scale(.95)}
+
+/* ── Connection Bar ── */
+.conn-bar{display:none;align-items:center;gap:8px;padding:6px 16px;font-size:12px;background:var(--card);border-bottom:1px solid var(--border)}
+.conn-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;transition:background .3s}
+.conn-bar .label{flex:1;color:var(--text2);font-weight:500}
+.conn-bar .ping{font-size:11px;font-weight:700;color:var(--text2)}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.5}}
+/* Branch stock grid */
+.bs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px}
+.bs-card{background:var(--card);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)}
+.bs-card .bs-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.bs-card .bs-content{font-size:13px}
+.bs-card .bs-empty{color:var(--text2);font-size:12px;padding:8px 0}
+.bs-card .bs-error{color:var(--primary);font-size:12px;padding:8px 0}
+.bs-card .bs-loading{color:var(--text2);font-size:12px;padding:8px 0}
+.bs-card .bs-time{font-size:9px;color:var(--text2);margin-top:4px}
+.bs-card.offline{border-color:var(--green-bg)}
+.bs-card.server{border-color:var(--accent-bg)}
+.bs-card.relay{border-color:var(--primary)}
+
+/* Lock overlay */
+/* Sync info */
+.sync-info{display:none;background:var(--card);padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.6}
+.sync-info.show{display:block}
+.sync-info .row{display:flex;align-items:center;gap:8px;padding:2px 0}
+.sync-info .label{color:var(--text2);min-width:90px}
+.sync-info .value{font-weight:600;color:var(--text);flex:1}
+.sync-info .badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.sync-info .badge.ok{background:var(--green-bg);color:var(--green)}
+.sync-info .badge.old{background:var(--border);color:var(--text2)}
+.sync-info .badge.stale{background:var(--red-bg);color:var(--primary)}
+.sync-info .sync-btn{width:100%;padding:8px;margin-top:6px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
+.sync-info .sync-btn:active{opacity:.8}
+.sync-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer}
+.sync-btn:active{opacity:.8}
+.sync-info .hist-item{padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)}
+.sync-info .hist-item:last-child{border:none}
+.sync-info .hist-item .h-time{font-weight:600;color:var(--text)}
+.sync-info .hist-toggle{color:var(--accent);font-size:11px;cursor:pointer;text-align:center;padding:4px}
+/* === SEARCH HISTORY === */
+.history-bar{margin-top:6px;padding:0 2px;display:none}
+.history-bar.show{display:block}
+.history-bar .hdr{font-size:10px;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.history-bar .hdr button{background:none;border:none;color:var(--primary);font-size:10px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.history-item{display:flex;align-items:center;padding:8px 10px;margin-bottom:4px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;gap:8px}
+.history-item:active{background:var(--border)}
+.history-item .hi-icon{font-size:16px;width:24px;text-align:center}
+.history-item .hi-info{flex:1;min-width:0}
+.history-item .hi-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item .hi-meta{font-size:10px;color:var(--text2);margin-top:1px}
+.history-item .hi-price{font-weight:700;color:var(--primary);font-size:14px;white-space:nowrap}
+.history-item .hi-time{font-size:9px;color:#9ca3af;white-space:nowrap;margin-left:4px}
+
+/* History below card (OFFLINE tab) */
+.history-below{margin:12px 16px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.history-below-header{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.history-below-header button{background:none;border:none;color:var(--primary);font-size:11px;cursor:pointer;font-weight:600}
+.hist-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:flex-end;justify-content:center}
+.hist-overlay.show{display:flex}
+.hist-panel{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:16px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hist-panel .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.hist-panel .hdr h3{margin:0;font-size:16px}
+.hist-panel .hdr button{background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text2)}
+.hist-panel .empty-state{text-align:center;padding:40px 20px;color:var(--text2);font-size:13px}
+.hist-panel .empty-state span{font-size:40px;display:block;margin-bottom:8px}
+.hist-clear-all{display:block;width:100%;padding:10px;margin-top:12px;background:var(--red-bg);color:var(--primary);border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;text-align:center}</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header" style="-webkit-user-select:none;user-select:none">
+    <div style="display:flex;align-items:center;position:relative">
+      <div style="flex:0 0 auto">
+        <button class="header-scanner" onclick="toggleScanner()" id="headerScanBtn">
+          <img src="ic_launcher.png" class="header-scanner-icon" alt="Scan">
+        </button>
+      </div>
+      <div style="flex:1;text-align:center" >
+        <h1><span>GPx45</span> CHECKER</h1>
+        <div class="sub">OFFLINE STOCK &amp; PRICE LOOKUP</div>
+      </div>
+      <div style="flex:0 0 auto">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </div>
+  <!-- Menu -->
+  <div class="menu-dropdown" id="menuDropdown">
+    <div class="menu-item" data-menu="sync" onclick="closeMenu();openSyncHistory()">🔄 Sync Data</div>
+    <div class="menu-item" data-menu="pricecard" onclick="closeMenu();showPriceCardPanel()">💰 Price Card</div>
+    <div class="menu-item" data-menu="omset" onclick="closeMenu();showOmsetPanel()">📈 OMSET</div>
+    <div class="menu-item" data-menu="about" onclick="closeMenu();showAbout()">ℹ About</div>
+    <div class="menu-item" data-menu="manual" onclick="closeMenu();showManual()">📖 Manual</div>
+    <div class="menu-item" data-menu="darkmode" onclick="closeMenu();toggleTheme()">🎨 Dark Mode</div>
+      </div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-bar">
+    <button class="mode-btn active" id="modeLocalDB" onclick="setMode('localdb')">📋 OFFLINE</button>
+    <button class="mode-btn" id="modeServer81" onclick="setMode('server81')">🌐 ONLINE</button>
+    <button class="mode-btn" id="modeRelay" onclick="setMode("relay")" style="display:none">📡 RELAY</button>
+  </div>
+
+  <!-- Live Bar (shown in detail mode) -->
+  <div class="live-bar" id="liveBarServer81" style="display:none">🌐 ONLINE - Stok Semua Cabang</div>
+  <div class="live-bar" id="liveBarLocalDB" style="display:none">📋 OFFLINE - Data Lokal</div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar" onclick="showDataAge()">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Starting...</span>
+    <span class="count" id="itemCount"></span>
+    <span id="dataAge" style="font-size:10px;color:var(--text2);margin-left:auto;white-space:nowrap"></span>
+  </div>
+
+  <!-- Connection Status (for ONLINE & RELAY modes) -->
+  <div class="conn-bar" id="connBar" style="display:none">
+    <span class="dot" id="connDot"></span>
+    <span class="label" id="connLabel">⏳ Mengetes koneksi...</span>
+    <span class="ping" id="connPing"></span>
+  </div>
+
+  <!-- Database Info (shown in OFFLINE mode) -->
+  <div class="sync-info" id="syncInfo">
+    <div class="row">
+      <span class="label">📦 Database</span>
+      <span class="value" id="dbInfoItems">-</span>
+    </div>
+    <div class="row">
+      <span class="label">🕐 Update</span>
+      <span class="value" id="dbInfoTime">-</span>
+    </div>
+  </div>
+  
+  <!-- Sync Overlay -->
+  <div class="sync-overlay" id="syncOverlay">
+    <div class="sync-panel" id="syncPanel">
+      <div id="syncLoading">
+        <div class="spinner"></div>
+        <div id="syncTitle" style="font-size:16px;font-weight:700;margin:8px 0 4px">Sync Database</div>
+        <div id="syncSub" style="font-size:12px;color:var(--text2)">Mendownload data terbaru...</div>
+        <div id="syncStatus" style="font-size:12px;color:var(--text2);margin-top:8px">Menghubungi server...</div>
+        <div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill" id="syncBar" style="width:10%"></div></div>
+        <div id="syncProgressText" style="font-size:11px;color:var(--text2)">Mengirim request...</div>
+        <button onclick="cancelSync()" id="syncCancelBtn" style="width:100%;padding:10px;margin-top:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">✕ Batal</button>
+      </div>
+      <div id="syncResult" style="display:none;text-align:left">
+        <div style="font-size:40px;margin-bottom:4px" id="syncIcon">✅</div>
+        <div style="font-size:16px;font-weight:700">Sinkron Berhasil!</div>
+        <div class="stat" style="margin-top:8px">📦 Items: <span id="syncOldCount">0</span> → <span id="syncNewCount">0</span></div>
+        <div class="stat">🕐 Update: <span id="syncOldDate">-</span> → <span id="syncNewDate">-</span></div>
+        <div class="stat">📊 Size: <span id="syncSize">-</span></div>
+        <div class="stat">🏷️ Harga berubah: <span id="syncPriceChange">0</span></div>
+        <div class="stat">📦 Stok berubah: <span id="syncStockChange">0</span></div>
+        <div class="stat">✨ Baru: <span id="syncAdded">0</span></div>
+        <div class="stat">❌ Hilang: <span id="syncRemoved">0</span></div>
+        <div class="stat">📋 Sama: <span id="syncKept">0</span></div>
+        <div id="syncSampleChanges" style="display:none;margin-top:8px;padding:8px;background:var(--bg);border-radius:8px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:4px">🏷️ Contoh perubahan harga:</div>
+          <div id="syncSampleList"></div>
+        </div>
+      </div>
+      <div id="syncError" style="display:none">
+        <div style="font-size:40px;margin-bottom:4px">❌</div>
+        <div style="font-size:16px;font-weight:700">Sinkron Gagal</div>
+        <div class="stat">Cek koneksi ke server 200</div>
+        <div id="syncErrorMsg" style="font-size:12px;color:var(--primary);margin-top:6px"></div>
+      </div>
+      <button id="syncRetryBtn" style="display:none;width:100%;padding:10px;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeSync()">✕ Tutup</button>
+    </div>
+  </div>
+
+  <div class="sync-overlay" id="syncHistOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1001;justify-content:center;align-items:center;padding:20px">
+    <div style="background:var(--card);border-radius:20px;width:100%;max-width:420px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.2);overflow:hidden">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <span style="font-size:16px;font-weight:700">📋 Riwayat & Detail Sync</span>
+        <button onclick="closeSyncHistory()" style="width:40px;height:40px;border:none;border-radius:50%;background:var(--border);color:var(--text);font-size:20px;cursor:pointer;font-weight:700">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 20px 20px" id="syncHistContent">
+        <div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">Memuat...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div id="relayUrlRow" style="display:none!important;margin-bottom:8px">
+      <div style="display:flex;gap:6px">
+        <input type="url" id="relayUrlInput" value="" placeholder="https://gp45-relay.xmoritzu.workers.dev/" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">
+        <button onclick="saveRelayUrl()" style="padding:8px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Simpan</button>
+      </div>
+      <div id="relayStatus" style="display:none!important;font-size:11px;color:var(--text2);margin-top:4px;text-align:center"></div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Ketuk untuk mencari..." autocomplete="off">
+      <button class="clear-btn" id="clearBtn" onclick="doClearSearch()">✕</button>
+      <div class="suggestions" id="suggestions"></div>
+      <!-- History Overlay (replaces old picker position) -->
+      <div class="hist-overlay" id="histOverlay">
+        <div class="hist-panel">
+          <div class="hdr">
+            <h3>⏱️ Riwayat Pencarian</h3>
+            <button id="histCloseBtn">✕</button>
+          </div>
+          <div id="histFullList"></div>
+          <button class="hist-clear-all" id="histClearAllBtn">🗑️ Hapus Semua Riwayat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Card -->
+  <div id="resultCard" class="result-card"></div>
+
+  <!-- History Below -->
+  <div class="history-below" id="historyBelow" style="display:none">
+    <div class="history-below-header">
+      <span>⏱️ Riwayat Pencarian</span>
+      <button class="hist-pbtn" id="histBelowShowAllBtn">Lihat semua →</button>
+    </div>
+    <div id="historyBelowList"></div>
+  </div>
+
+  <!-- Scanner -->
+  <div id="scannerContainer">
+    <div id="scannerElement"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;width:100%;max-width:400px">
+      <button class="scan-close" onclick="stopScanner()" style="flex:1">✕ Tutup Scanner</button>
+      <button class="scan-torch" id="torchBtn" onclick="toggleTorch()" style="flex:0 0 auto;width:auto;padding:10px 16px">⛱ Lampu</button>
+    </div>
+  </div>
+
+  <!-- Live Area (for Detail mode, hidden by default) -->
+  <div id="liveArea" class="live-area" style="display:none">
+    <div class="live-hint" id="liveHint" style="text-align:center;padding:40px 20px;color:var(--text2);font-size:14px;line-height:1.6">
+      <span style="font-size:48px;display:block;margin-bottom:12px">📡</span>
+      Cari barang langsung dari server GP45<br>
+      <span style="font-size:12px;color:var(--text2);margin-top:4px;display:block">Tampilkan stok semua outlet</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-section" id="loadingSection">
+    <div class="spinner"></div>
+    <div class="text" id="loadingText">Loading database...</div>
+    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    <div class="sub" id="loadingSub"></div>
+  </div>
+</div>
+
+<!-- OMSET Overlay -->
+<div class="omset-overlay" id="omsetOverlay">
+  <div class="omset-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:18px;margin:0">📈 OMSET</h3>
+      <button onclick="closeOmset()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text2)">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 10px">Total penjualan per sales per hari</p>
+    <input type="date" class="omset-date" id="omsetDate">
+        <div class="omset-tab">
+      <button id="omsetTabBtn" onclick="loadOmset()" class="active">📊 Harian</button>
+      <button id="omsetBulanBtn" onclick="loadOmsetBulan()">📅 Bulan Ini</button>
+      <button onclick="showOmsetSetting()">⚙ Setting</button>
+    </div>
+    <div id="omsetResult"></div>
+    <div id="omsetBulanResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- About Overlay -->
+<div class="about-overlay" id="aboutOverlay">
+  <div class="about-panel">
+    <div class="about-header">
+      <div style="font-size:40px;margin-bottom:8px">🏪</div>
+      <div style="font-size:20px;font-weight:800">GP45 DB</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px">v1.0.0</div>
+    </div>
+    <div class="about-body">
+      <div class="about-section">
+        <div class="about-section-title">📋 Info</div>
+        <div class="about-row"><span>Aplikasi</span><span>GP45 DB</span></div>
+        <div class="about-row"><span>Versi</span><span>1.0.0</span></div>
+        <div class="about-row"><span>Database</span><span id="aboutDbCount">- item</span></div>
+        <div class="about-row"><span>Mode</span><span>OFFLINE · ONLINE · RELAY</span></div>
+        <div class="about-row"><span>Creator</span><span>moors pangalila</span></div>
+      </div>
+      <div class="about-section">
+        <div class="about-section-title">📌 Riwayat Update</div>
+        <div class="about-changelog">
+          <span style="font-weight:700;color:var(--primary)">v1.0.0</span> — GP45 DB Edition<br>
+      • Database 41.101 item + outlet stock 35.314 item (bawaan)<br>
+      • Semua fitur dari ULTIMATE Edition tetap dipertahankan<br>
+      <br>
+      <span style="font-weight:700;color:var(--primary)">v4.11.0</span> — 3-Source Branch Stock Card<br>
+      • 📦 Offline: data outlet stock tersimpan dari sync terakhir<br>
+      • 🌐 Server 200: fetch live + otomatis simpan offline<br>
+      • 📡 Relay: cadangan kalo server 200 gagal<br>
+      • Tiga sumber beda card, loading masing-masing<br>
+      <br>
+      <span style="font-weight:700;color:var(--primary)">v4.10.0</span> — Tap to Focus + Focus Ring<br>
+      • Tap di layar scanner buat trigger autofokus ulang<br>
+      • Animasi focus ring (lingkaran putih) muncul di titik tap<br>
+      • Fokus balik ke continuous setelah 1.5 detik<br>
+      • Default pakai continuous (tanpa near biar natural)<br>
+      <br>
+          <span style="font-weight:700;color:var(--primary)">v4.9.0</span> — Scanner Fix: FPS Turun, Res Naik, Focus Continuous<br>      • FPS 15 → 8 biar tiap frame lebih terang & kurang noise<br>      • Resolusi 640×480 → 1280×720 biar detail bar barcode lebih kebaca<br>      • Tambah focusMode continuous biar kamera auto fokus<br>      • Fix: barcode CODE-128 tipis & bengkok lebih gampang terdeteksi<br>      <br>
+          <span style="font-weight:700;color:var(--primary)">v4.8.0</span> — Scanner Cepat + Remove QR<br>      • FPS 5 → 15 biar scan lebih responsif dan cepat<br>      • Hapus QR_CODE (gak dipake di toko)<br>      • Hapus qrbox (cuma buat QR)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.1</span> — Torch Fix - native API<br>      • Torch sekarang pake native MediaStreamTrack API biar bisa nyala<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.0</span> — Orange Theme + Torch + Scanner Overlay<br>      • Ganti semua warna merah jadi orange (header, tombol, harga, dll)<br>      • Tombol Flashlight/Lampu di scanner (nyala/mati)<br>      • Scanner pindah ke overlay panel (gak ganggu halaman)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.6.0</span> — 3-Button Lantai Setting + Scanner Beep<br>      • Setting lantai pake 3 tombol langsung (L1 | L2 | Nonaktif)<br>      • Scanner tambah beep & vibrate biar tau scan berhasil<br>      • Perbaiki layout omset percentage pake badge box<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.5.0</span> — Scanner Fix Lag + All Barcode Format<br>      • Camera FPS turun 5 biar ringan di HP<br>      • Resolusi kamera 640x480 biar gak lag<br>      • Barcode formats lengkap: CODE_128, CODE_39, EAN_13, EAN_8, UPC_A, UPC_E, QR<br>      • facingMode environment (tanpa exact) biar kompatibel semua device<br>      • Hapus torch & fallback yang bikin ribet<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.4.0</span>nel<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.2.0</span> — Fix Omset Detail Click Bug<br>      • Perbaiki bug klik detail sales hapus row lain<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.1.0</span> — Omset Code Cleanup<br>      • Hapus dead code renderOmset + tryJson<br>      • Bersihin duplicate render logic<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.0.0</span> — STABLE: Price Card fix + Detail Panel overlay + ULTIMATE badge<br>      • Price Card crash fix (findIndex + .finally compatibility)<br>      • Detail Price Card pake overlay panel sendiri<br>      • Badge ULTIMATE di icon original<br>      • Package: moorspangalila.ultimate.fresh (test)<br>      <br>      <span style="font-weight:700;color:var(--primary)">v3.2.0</span> — Search Icon + Harga Hero + Bersihin Code<br>
+          • 🔍 Search icon tetap di kiri, hapus emoji placeholder<br>
+          • Harga hero 52px bold 900, tanpa label Harga Jual/per item<br>
+          • Hapus SKU line di card (nama lebih gede)<br>
+          • Hapus tombol 📦 Offline hidden + dead code<br>
+          • Manual pindah ke setelah izin kamera<br>
+          • Fix: toast pas copy nama+harga
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v3.1.1</span> — Copy Nama+Harga + Cancel Sync<br>
+          • Tombol 📋 copy nama + harga (semua tab)<br>
+          • Tombol ✕ Batal pas sync (pake AbortController)<br>
+          • Dark mode: about, manual, stock.low, price-section, toast fix<br>
+          • Tombol sync proper styling (global .sync-btn)<br>
+          • Fix: resetSyncOverlay + saveToIndexedDB kehapus<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v3.1.0</span> — Search History + Price Card<br>
+          • Price Card - Buat & kelola price card langsung dari HP<br>
+          • Riwayat pencarian otomatis<br>
+          • Search mode barcode & nama<br>
+          • Tema dark mode<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.8</span> — Sync overlay panel + GP45 stock fix<br>
+          • Riwayat sync pindah ke panel overlay (bisa di-scroll)<br>
+          • Stok GP45 (Home & Living) muncul di semua tab<br>
+          • Stok per cabang lengkap + total semua<br>
+          • Info database + umur data di tab OFFLINE<br>
+          • Fix: `searchTimeoutId` error di fungsi lain<br>
+          • Fix: AbortSignal.timeout → AbortController (Android lama)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.7</span> — Detail sync + history<br>
+          • Detail item yg berubah (harga & stok) setelah sync<br>
+          • Riwayat sync tersimpan di localStorage<br>
+          • Badge umur database (🟢 🟡 🔴)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.6</span> — Database baru + RELAY detail<br>
+          • Database 41.162 item (Aktif saja) dari server 200<br>
+          • Big Price + Stok Cabang di tab RELAY<br>
+          • Fix: nested object stok_cabang (relay API)<br>
+          • Ukuran APK lebih ringan (1.6 MB)<br>
+          <br>
+          <span style="font-weight:700;color:var(--primary)">v2.5</span> — RELAY tab + sync<br>
+          • Tab RELAY — akses dari luar via Cloudflare Worker<br>
+          • Sync langsung ke server 200 (tanpa Flask)<br>
+          • Big Price + Info Grid + Stok Cabang di semua tab<br>
+          • Detail perbandingan data pas sync<br>
+          • Scanner barcode di header<br>
+          • Debug log + manual built-in
+        </div>
+      </div>
+      <div class="about-section">
+        <div class="about-section-title">🔄 Sync Data</div>
+        <div class="about-changelog" style="font-size:11px">
+          Sync akan membandingkan data offline dengan data terbaru dari server.
+          Jika ada perubahan harga/stok, kamu bisa memilih untuk update atau tidak.
+          Membutuhkan koneksi ke server internal.
+        </div>
+      </div>
+    </div>
+    <button class="about-close-btn" onclick="closeAbout()">✕ Tutup</button>
+  </div>
+</div>
+
+<!-- Manual Overlay -->
+<div class="manual-overlay" id="manualOverlay">
+  <div class="manual-panel">
+    <div class="manual-header">
+      <div style="font-size:32px;margin-bottom:4px">📖</div>
+      <div style="font-size:18px;font-weight:800">PANDUAN CEPAT</div>
+      <div style="font-size:11px;opacity:.7">GP45 DB v4.7.1 - Orange Theme + Torch Fix + Scanner Overlay</div>
+    </div>
+    <div class="manual-body">
+      <div class="manual-section">
+        <div class="manual-stitle">🔍 CARI BARANG</div>
+        <div class="manual-text">Ketik di kotak search. Cari pake nama atau barcode — otomatis detek. Multi-kata (AND): <i>wipro kunci sok 8</i>. Tap item untuk lihat detail harga, stok, & stok cabang.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📷 SCAN BARCODE</div>
+        <div class="manual-text">Tap ikon <b>📷</b> di pojok kiri header. Arahkan ke barcode. Hasil langsung tampil.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📋 OFFLINE · 🌐 ONLINE · 📡 RELAY</div>
+        <div class="manual-text"><b>OFFLINE</b> = data lokal HP. Cepet, gak pakai internet. <b>ONLINE</b> = langsung ke server 200 (butuh WiFi toko). <b>RELAY</b> = via Cloudflare, bisa dari luar toko.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📋 SALIN NAMA + HARGA</div>
+        <div class="manual-text">Tap tombol <b>📋</b> di detail barang. Otomatis copy <i>Nama Barang - RpXX.XXX</i> ke clipboard. Tinggal paste kirim ke customer.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">🔄 SYNC DATA</div>
+        <div class="manual-text">Menu ☰ → <b>Sync Data</b>. Update database offline dengan data terbaru dari server 200. Butuh koneksi WiFi ke jaringan toko. Bisa dibatalkan kalo salah pencet.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">💰 PRICE CARD</div>
+        <div class="manual-text">Menu ☰ → <b>Price Card</b>. Buat daftar barang untuk print label. Cari barang, set qty, simpan. Lihat & hapus di riwayat.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">📈 OMSET</div>
+        <div class="manual-text">Menu ☰ → <b>Omset</b>. Lihat total penjualan per sales per hari. Tap nama sales untuk lihat barang yg dijual.</div>
+      </div>
+      <div class="manual-section">
+        <div class="manual-stitle">🌙 DARK MODE</div>
+        <div class="manual-text">Menu ☰ → <b>Dark Mode</b>. Toggle tema gelap/terang. Tersimpan otomatis.</div>
+      </div>
+    </div>
+    <button class="manual-close-btn" onclick="closeManual()">✕ MENGERTI</button>
+  </div>
+</div>
+<!-- Price Card Overlay -->
+<div class="pc-overlay" id="pcOverlay">
+  <div class="pc-panel">
+    <div class="pc-header">
+      <h3>💰 Price Card</h3>
+      <button class="pc-close" onclick="closePriceCard()">✕</button>
+    </div>
+    <div class="pc-body">
+      <input type="text" class="pc-name" id="pcName" placeholder="Nama price card (contoh: LANTAI 2)" autocomplete="off">
+      <input type="text" class="pc-search" id="pcSearch" placeholder="🔍 Cari barang..." autocomplete="off">
+      <div class="pc-results" id="pcResults"></div>
+      <div class="pc-cart">
+        <div class="pc-cart-header">🛒 Cart (<span id="pcCartCount">0</span>)</div>
+        <div id="pcCartItems"><div style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Belum ada item</div></div>
+      </div>
+      <button class="pc-save-btn" id="pcSaveBtn" disabled onclick="savePriceCard()">📥 Simpan Price Card</button>
+      <div class="pc-history">
+        <div class="pc-history-title">📋 Riwayat Price Card</div>
+        <div id="pcHistoryList"><div style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Memuat...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+  <!-- Debug Log -->
+
+<script>
+
+// ════════════════════════════════════════
+// SEARCH HISTORY
+// ════════════════════════════════════════
+var SearchHistory = {};
+(function() {
+  var KEY = 'gp45_search_history';
+  var MAX = 20;
+  var saved = [];
+  
+  function ld() {
+    try { saved = JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch(e) { saved = []; }
+  }
+  function sv() {
+    localStorage.setItem(KEY, JSON.stringify(saved));
+  }
+  
+  SearchHistory.save = function(item) {
+    if (!item || !item.k) return;
+    ld();
+    for (var i = 0; i < saved.length; i++) {
+      if (saved[i].k === item.k) { saved.splice(i, 1); break; }
+    }
+    saved.unshift({
+      k: item.k,
+      n: item.n || item.Nama || item.nama || '',
+      h: Number(item.h || item.HJual || item.harga_jual || 0),
+      b: item.b || item.Barcode || item.barcode || '',
+      t: Date.now()
+    });
+    if (saved.length > MAX) saved.length = MAX;
+    sv();
+    SearchHistory.render();
+  };
+  
+  SearchHistory.render = function(containerId) {
+    var list = containerId ? document.getElementById(containerId) : document.getElementById('historyBelowList');
+    if (!list) return;
+    ld();
+    if (saved.length === 0) { list.innerHTML = '<div style="text-align:center;padding:8px;font-size:11px;color:var(--text2)">Belum ada riwayat</div>'; return; }
+    var h = '';
+    var n = Math.min(saved.length, 5);
+    for (var i = 0; i < n; i++) {
+      var it = saved[i];
+      var p = it.h > 0 ? 'Rp' + Number(it.h).toLocaleString('id-ID') : '';
+      h += '<div class="history-item" onclick="SearchHistory.openByIndex(' + i + ')">' +
+        '<span class="hi-icon">📦</span>' +
+        '<div class="hi-info"><div class="hi-name">' + esc(it.n) + '</div><div class="hi-meta">' + esc(it.k) + (it.b ? ' | ' + esc(it.b) : '') + '</div></div>' +
+        '<div class="hi-price">' + p + '</div>' +
+        '<div class="hi-time">' + getTimeAgo(it.t) + '</div></div>';
+    }
+    list.innerHTML = h;
+  };
+  
+  SearchHistory.openByIndex = function(idx) {
+    ld();
+    if (idx < 0 || idx >= saved.length) return;
+    var it = saved[idx];
+    if (typeof allItems !== 'undefined' && allItems.length > 0) {
+      for (var i = 0; i < allItems.length; i++) {
+        if (allItems[i].k === it.k || allItems[i].b === it.k || allItems[i].b2 === it.k) {
+          showResult(allItems[i]);
+          return;
+        }
+      }
+    }
+    if (it.k) { showServer81Detail(it.k, it.b || it.k); }
+  };
+  
+  SearchHistory.showAll = function() {
+    ld();
+    var panel = document.getElementById('histOverlay');
+    var list = document.getElementById('histFullList');
+    if (!panel || !list) return;
+    if (saved.length === 0) {
+      list.innerHTML = '<div class="empty-state"><span>📭</span>Belum ada riwayat pencarian</div>';
+    } else {
+      var h = '';
+      for (var i = 0; i < saved.length; i++) {
+        var it = saved[i];
+        var p = it.h > 0 ? 'Rp' + Number(it.h).toLocaleString('id-ID') : '';
+        h += '<div class="history-item" onclick="SearchHistory.openByIndex(' + i + ');SearchHistory.hideAll()">' +
+          '<span class="hi-icon">📦</span>' +
+          '<div class="hi-info"><div class="hi-name">' + esc(it.n) + '</div><div class="hi-meta">' + esc(it.k) + (it.b ? ' | ' + esc(it.b) : '') + '</div></div>' +
+          '<div class="hi-price">' + p + '</div>' +
+          '<div class="hi-time">' + getTimeAgo(it.t) + '</div></div>';
+      }
+      list.innerHTML = h + '<div style="text-align:center;font-size:11px;color:var(--text2);margin-top:8px">Total ' + saved.length + ' riwayat</div>';
+    }
+    panel.classList.add('show');
+  };
+  
+  SearchHistory.hideAll = function() {
+    var panel = document.getElementById('histOverlay');
+    if (panel) panel.classList.remove('show');
+  };
+  
+  SearchHistory.clearAll = function() {
+    if (!confirm('Hapus semua riwayat pencarian?')) return;
+    localStorage.removeItem(KEY);
+    saved = [];
+    SearchHistory.render();
+    SearchHistory.hideAll();
+    showToast('Riwayat dihapus');
+  };
+  
+  // Attach UI button listeners
+  setTimeout(function() {
+    var b1 = document.getElementById('histShowAllBtn');
+    var b2 = document.getElementById('histCloseBtn');
+    var b3 = document.getElementById('histClearAllBtn');
+    var b4 = document.getElementById('histBelowShowAllBtn');
+    var ov = document.getElementById('histOverlay');
+    if (b1) b1.onclick = SearchHistory.showAll;
+    if (b2) b2.onclick = SearchHistory.hideAll;
+    if (b3) b3.onclick = SearchHistory.clearAll;
+    if (b4) b4.onclick = SearchHistory.showAll;
+    if (ov) ov.onclick = function(e) { if (e.target === this) SearchHistory.hideAll(); };
+  }, 50);
+})();
+
+function getTimeAgo(ts) {
+  if (!ts) return '';
+  var diff = Date.now() - ts;
+  var mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'baru';
+  if (mins < 60) return mins + 'm lalu';
+  var hours = Math.floor(mins / 60);
+  if (hours < 24) return hours + 'j lalu';
+  var days = Math.floor(hours / 24);
+  if (days < 7) return days + 'h lalu';
+  return Math.floor(days / 7) + 'mgg lalu';
+}
+
+var allItems = [];
+var totalChunks = 5;
+var dbInfo = { version: '4.0', date: '23 Jun 2026', items: 41158, source: 'server 200' };
+var currentMode = 'localdb';
+var isLoading = false;  // Prevent sync during data loading
+var html5QrCode = null;
+var scannerActive = false;
+var torchOn = false;
+var searchTimeout = null;
+var liveTimeout = null;
+var pingInterval = null;
+var lastLiveQuery = '';
+
+var _serverIP = '192.168.6.200';
+function getServerIP() {
+  var ip = localStorage.getItem('gp45_server_ip');
+  if (ip) _serverIP = ip;
+  return _serverIP;
+}
+function saveServerIP(ip) {
+  ip = (ip || '').trim();
+  if (!ip) return;
+  localStorage.setItem('gp45_server_ip', ip);
+  _serverIP = ip;
+  showToast('✅ Server IP: ' + ip);
+}
+function gpApi(action, extra) {
+  return 'http://' + getServerIP() + '/grand.php?key=123' + (action ? '&action=' + action : '') + (extra ? '&' + extra : '');
+}
+
+// ════════════════════════════════════════
+// DATA LOADING
+// ════════════════════════════════════════
+
+function loadData() 
+{
+  isLoading = true;
+  var status = document.getElementById('statusText');
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('itemCount');
+  var progress = document.getElementById('progressFill');
+  var sub = document.getElementById('loadingSub');
+  var loadText = document.getElementById('loadingText');
+  var loadingSection = document.getElementById('loadingSection');
+  var failedChunks = [];
+  
+  function loadNext(i) { 
+    if (i >= totalChunks) {
+      progress.style.width = '100%';
+      var msg = allItems.length.toLocaleString() + ' items ready!'; 
+      if (failedChunks.length > 0) msg += ' (' + failedChunks.length + ' chunks skipped)';
+      sub.textContent = msg;
+      setTimeout(function() {
+        loadingSection.style.display = "none";
+        status.textContent = allItems.length.toLocaleString() + " items [offline]";
+        var aboutDb = document.getElementById("aboutDbCount");
+        if (aboutDb) aboutDb.textContent = allItems.length.toLocaleString() + " item";
+        input.disabled = false;
+        input.focus();
+        // Set last update info
+        // Set initial timestamp: bundled data is fresh from server
+        if (!localStorage.getItem("gp45_lu_v26")) {
+          localStorage.setItem("gp45_lu_v26", Date.now().toString());
+        }
+        loadBundledOutletStock();
+        updateLastUpdateDisplay();
+        status.textContent = allItems.length.toLocaleString() + ' items [offline]';
+        renderDbInfo();
+        SearchHistory.render();
+        isLoading = false;
+        input.disabled = false;
+        input.focus();
+      }, 400);
+      return;
+    }
+    sub.textContent = 'Loading ' + (i+1) + '/' + totalChunks + '...';
+    progress.style.width = ((i / totalChunks) * 100) + '%';
+    
+    loadChunk(i).then(function(chunk) {
+      if (chunk && chunk.length) {
+        Array.prototype.push.apply(allItems, chunk);
+        
+      } else {
+        
+      }
+      count.textContent = '[items] ' + allItems.length.toLocaleString();
+      loadNext(i + 1);
+    }).catch(function(err) {
+      failedChunks.push(i);
+      loadNext(i + 1); // SKIP failed chunk, continue loading
+    });
+  }
+  loadNext(0);
+}
+
+function loadBundledOutletStock() {
+  // Version check: only reload if app version changed or never loaded
+  var bundledVer = localStorage.getItem('gp45_ostock_bundled_ver');
+  var currentVer = '1.0.0';
+  if (bundledVer === currentVer) return;
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'data_outlet.json', true);
+  xhr.onload = function() {
+    if (xhr.status === 0 || xhr.status === 200) {
+      try {
+        var stocks = JSON.parse(xhr.responseText);
+        if (!stocks || typeof stocks !== 'object') return;
+        var codes = Object.keys(stocks);
+        var saved = 0;
+        for (var i = 0; i < codes.length; i++) {
+          var kode = codes[i];
+          var sk = stocks[kode];
+          if (sk && typeof sk === 'object') {
+            try {
+              var key = 'gp45_ostock_' + kode.replace(/[^a-zA-Z0-9]/g, '_');
+              localStorage.setItem(key, JSON.stringify({ ts: Date.now(), stocks: sk }));
+              saved++;
+            } catch(e) { break; }
+          }
+        }
+        localStorage.setItem('gp45_ostock_bundled_ver', currentVer);
+        console.log('[Outlet] Bundled ' + saved + ' outlet stock items loaded (ver ' + currentVer + ')');
+      } catch(e) { console.log('[Outlet] Failed to load bundled outlet stock'); }
+    }
+  };
+  xhr.onerror = function() { console.log('[Outlet] Failed to fetch bundled outlet stock'); };
+  xhr.timeout = 30000;
+  xhr.send();
+}
+
+function loadChunk(idx) {
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data_' + idx + '.json', true); 
+    xhr.onload = function() {
+      if (xhr.status === 0 || xhr.status === 200) {
+        try {  resolve(JSON.parse(xhr.responseText)); }
+        catch(e) {  reject(new Error('Parse error chunk ' + idx)); }
+      } else { reject(new Error('HTTP ' + xhr.status + ' chunk ' + idx)); }
+    };
+    xhr.onerror = function() {  reject(new Error('Failed chunk ' + idx)); };
+    xhr.timeout = 15000;
+    xhr.send();
+  });
+}
+
+// ════════════════════════════════════════
+// MODE SWITCHING
+// ════════════════════════════════════════
+
+function setMode(mode) {
+  currentMode = mode;
+  // document.getElementById('modeOffline').className = 'mode-btn' + (mode === 'offline' ? ' active' : ''); // removed
+  document.getElementById('modeLocalDB').className = 'mode-btn' + (mode === 'localdb' ? ' active' : '');
+  document.getElementById('modeServer81').className = 'mode-btn' + (mode === 'server81' ? ' active' : '');
+  document.getElementById('modeRelay').className = 'mode-btn' + (mode === 'relay' ? ' active' : '');
+  
+  // Hide all mode-specific bars
+  document.getElementById('syncInfo').classList.remove('show');
+  document.getElementById('connBar').style.display = 'none';
+  clearInterval(pingInterval);
+  document.getElementById('liveBarServer81').style.display = 'none';
+  document.getElementById('liveBarLocalDB').style.display = 'none';
+  document.getElementById('liveArea').style.display = 'none';
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('relayUrlRow').style.display = 'none';
+  document.getElementById('suggestions').classList.remove('show');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearBtn').classList.remove('show');
+  
+  if (mode === 'localdb') {
+    document.getElementById('statusBar').style.display = 'flex';
+    document.getElementById('liveBarLocalDB').style.display = 'block';
+    document.getElementById('syncInfo').classList.add('show');
+    document.getElementById('searchInput').placeholder = 'Cari di database offline...';
+    document.getElementById('liveArea').style.display = 'block';
+    document.getElementById('historyBelow').style.display = 'block';
+    // Show last update time
+    updateLastUpdateDisplay();
+    renderDbInfo();
+    SearchHistory.render('historyBelowList');
+  } else if (mode === 'server81') {
+    document.getElementById('statusBar').style.display = 'flex';
+    document.getElementById('liveBarServer81').style.display = 'block';
+    document.getElementById('connBar').style.display = 'flex';
+    document.getElementById('searchInput').placeholder = 'Cari di server 200...';
+    document.getElementById('liveArea').style.display = 'block';
+    clearInterval(pingInterval);
+    pingServer200();
+    pingInterval = setInterval(pingServer200, 5000);
+  } else if (mode === 'relay') {
+    document.getElementById('statusBar').style.display = 'flex';
+    document.getElementById('searchInput').placeholder = 'Cari via relay server...';
+    document.getElementById('liveArea').style.display = 'block';
+    document.getElementById('relayUrlRow').style.display = 'block';
+    document.getElementById('connBar').style.display = 'flex';
+    clearInterval(pingInterval);
+    pingRelay();
+    pingInterval = setInterval(pingRelay, 10000);
+    var savedUrl = localStorage.getItem('gp45_relay_url') || '';
+    if (!savedUrl) {
+      savedUrl = 'https://gp45-relay.xmoritzu.workers.dev/';
+      localStorage.setItem('gp45_relay_url', savedUrl);
+    }
+    document.getElementById('relayUrlInput').value = savedUrl;
+    document.getElementById('relayStatus').textContent = '📡 ' + savedUrl;
+  }
+}
+
+// Shared precision filter: word-boundary AND matching
+function precisionFilter(items, query, mode) {
+  if (mode === 'barcode') return items; // server handles barcode search
+  var keywords = query.trim().toLowerCase().split(/[\s,]+/).filter(function(kw) { return kw.length > 0; });
+  if (keywords.length === 0) return items;
+  
+  // Use indexOf AND matching (not strict word boundary)
+  return items.filter(function(item) {
+    var n = (item.n || '').toLowerCase();
+    for (var j = 0; j < keywords.length; j++) {
+      if (n.indexOf(keywords[j]) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function searchItems(query) {
+  if (!query || query.trim().length < 1) return [];
+  query = query.trim().toLowerCase();
+  var keywords = query.split(/[\s,]+/).filter(function(kw) { return kw.length > 0; });
+  if (keywords.length === 0) return [];
+
+  var seen = {};
+  var results = [];
+
+  // Skip name search if query is all digits (likely barcode, not item name)
+  var cleanQuery = query.replace(/[\s,]+/g, '');
+  var isDigitQuery = cleanQuery.length >= 3 && /^[\d]+$/.test(cleanQuery);
+
+  if (!isDigitQuery) {
+    // Phase 1: AND name match (multi-word)
+    for (var i = 0; i < allItems.length; i++) {
+      var item = allItems[i];
+      if (!item) continue;
+      var n = (item.n || '').toLowerCase();
+      var matchAll = true;
+      for (var j = 0; j < keywords.length; j++) {
+        if (n.indexOf(keywords[j]) === -1) { matchAll = false; break; }
+      }
+      if (matchAll) {
+        seen[item.k || i] = true;
+        results.push(item);
+      }
+    }
+  }
+
+  // Phase 2: AND barcode/kode match (same logic as Phase 1)
+  for (var i = 0; i < allItems.length; i++) {
+    var item = allItems[i];
+    if (!item || seen[item.k || i]) continue;
+    var ik = (item.k || '').toLowerCase();
+    var ib = (item.b || '').toLowerCase();
+    var ib2 = (item.b2 || '').toLowerCase();
+    
+    var matchAll = true;
+    for (var j = 0; j < keywords.length; j++) {
+      var kw = keywords[j];
+      if (ik.indexOf(kw) === -1 && ib.indexOf(kw) === -1 && ib2.indexOf(kw) === -1) {
+        matchAll = false;
+        break;
+      }
+    }
+    if (matchAll) results.push(item);
+  }
+
+  // Sort: stock > 0 first
+  results.sort(function(a, b) {
+    var sa = parseFloat(a.q) || 0;
+    var sb = parseFloat(b.q) || 0;
+    if (sa > 0 && sb <= 0) return -1;
+    if (sa <= 0 && sb > 0) return 1;
+    return 0;
+  });
+
+  return results.slice(0, 50);
+}
+
+function showSuggestions(results) {
+  var el = document.getElementById('suggestions');
+  if (!results || results.length === 0) {
+    el.innerHTML = '<div class="no-results">🔍 Barang tidak ditemukan</div>';
+    el.classList.add('show'); window._lastResults = []; return;
+  }
+  var html = '';
+  for (var i = 0; i < results.length; i++) {
+    var item = results[i];
+    var price = item.h > 0 ? 'Rp' + Number(item.h).toLocaleString('id-ID') : '-';
+    var sc = item.q > 5 ? 'avail' : (item.q > 0 ? 'low' : 'empty');
+    var sl = item.q > 0 ? Number(item.q).toFixed(0) : '0';
+    html += '<div class="item" onclick="selectItem(' + i + ')"><div class="info"><div class="name">' + esc(item.n) + '</div><div class="bcode">' + esc(item.b || item.b2 || '') + '</div></div><div class="price">' + price + '</div><div class="stock ' + sc + '">' + sl + '</div></div>';
+  }
+  el.innerHTML = html; el.classList.add('show');
+  window._lastResults = results;
+}
+
+function selectItem(idx) {
+  var r = window._lastResults;
+  if (!r || !r[idx]) return;
+  showResult(r[idx]);
+  document.getElementById('suggestions').classList.remove('show');
+  document.getElementById('searchInput').value = r[idx].n || r[idx].k;
+  document.getElementById('clearBtn').classList.add('show');
+}
+
+function showResult(item) {
+  if (!item) { document.getElementById('resultCard').classList.remove('show'); return; }
+  SearchHistory.save(item);
+  var card = document.getElementById('resultCard');
+  var sc = item.q > 0 ? 'avail' : 'empty';
+  var sl = item.q > 0 ? '✅ Stok: ' + Number(item.q).toFixed(0) + ' ' + (item.s || '') : '❌ Stok Habis';
+  var isLocalDB = (currentMode === 'localdb');
+  
+  // Extra info for the info grid
+  var extras = '';
+  extras += '<div class="cell"><div class="lbl">Kode</div><div class="val">' + esc(item.k) + '</div></div>';
+  extras += '<div class="cell"><div class="lbl">Barcode</div><div class="val">' + esc(item.b || '-') + '</div></div>';
+  if (item.b2) extras += '<div class="cell"><div class="lbl">Barcode 2</div><div class="val">' + esc(item.b2) + '</div></div>';
+  extras += '<div class="cell"><div class="lbl">Satuan</div><div class="val">' + esc(item.s || '-') + '</div></div>';
+  if (item.m && item.m.trim()) extras += '<div class="cell"><div class="lbl">Merek</div><div class="val">' + esc(item.m) + '</div></div>';
+  if (item.hb > 0) extras += '<div class="cell"><div class="lbl">Harga Beli</div><div class="val">Rp' + Number(item.hb).toLocaleString('id-ID') + '</div></div>';
+  if (item.h2 > 0) extras += '<div class="cell"><div class="lbl">HJual 2</div><div class="val">Rp' + Number(item.h2).toLocaleString('id-ID') + '</div></div>';
+  if (item.h3 > 0) extras += '<div class="cell"><div class="lbl">HJual 3</div><div class="val">Rp' + Number(item.h3).toLocaleString('id-ID') + '</div></div>';
+  if (item.hm > 0 && item.hm != item.h) extras += '<div class="cell"><div class="lbl">Harga Member</div><div class="val">Rp' + Number(item.hm).toLocaleString('id-ID') + '</div></div>';
+  
+  // Unified card: Big Price + Info Grid + Branch Stock
+  var modeLabel = isLocalDB ? 'OFFLINE' : (currentMode === 'server81' ? 'ONLINE' : 'OFFLINE');
+  card.innerHTML = 
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + esc(item.n) + '</div><button class="copy-np-btn" data-nama="' + escAttr(item.n) + '" data-harga="' + Number(item.h || 0).toLocaleString('id-ID') + '" style="flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:8px;line-height:1" title="Salin nama + harga">📋</button></div>' +
+    // Big Price
+    '<div class="price-section">' +
+      '<div class="price-big"><span class="rp">Rp</span>' + Number(item.h || 0).toLocaleString('id-ID') + '</div>' +
+    '</div>' +
+    '<div class="stock-row ' + sc + '" style="margin:8px 0">' + sl + '</div>' +
+    '<div class="detail-title">📋 ' + modeLabel + '</div>' +
+    '<div class="info-grid">' + extras + '</div>' +
+    '<div id="offlineBranchStock" style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;text-align:center;font-size:13px;color:var(--text2)">🔄 Mengambil stok cabang...</div>';
+  
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+  // Show search history below card (OFFLINE tab)
+  if (currentMode === 'localdb' || currentMode === 'offline') {
+    var hb = document.getElementById('historyBelow');
+    if (hb) hb.style.display = 'block';
+    SearchHistory.render('historyBelowList');
+  } else {
+    var hb = document.getElementById('historyBelow');
+    if (hb) hb.style.display = 'none';
+  }
+  
+  // Branch stock: 3 sources (offline, server 200, relay)
+  var q = item.k || item.b;
+  showBranchStock('offlineBranchStock', item, q);
+}
+function doClearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('suggestions').classList.remove('show');
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('clearBtn').classList.remove('show');
+  document.getElementById('searchInput').focus();
+  if (currentMode === 'localdb' || currentMode === 'offline') {
+    SearchHistory.render('historyBelowList');
+  }
+}
+
+function esc(t) { return !t ? '' : String(t).replace(/[&<>"']/g, function(m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; }); }
+function escAttr(t) { return !t ? '' : String(t).replace(/[&"]/g, function(m) { return ({'&':'&amp;','"':'&quot;'})[m]; }); }
+
+// ════════════════════════════════════════
+// MENU
+// ════════════════════════════════════════
+
+function toggleMenu() { document.getElementById('menuDropdown').classList.toggle('show'); }
+function closeMenu() { document.getElementById('menuDropdown').classList.remove('show'); }
+
+// ════════════════════════════════════════
+// SETTINGS
+function toggleTheme() {
+  var body = document.body;
+  var isDark = body.classList.toggle("dark");
+  localStorage.setItem("gp45_theme", isDark ? "dark" : "light");
+  // Update menu text
+  var menuItems = document.querySelectorAll(".menu-item");
+  for (var i = 0; i < menuItems.length; i++) {
+    if (menuItems[i].textContent.indexOf("Dark Mode") >= 0 || menuItems[i].textContent.indexOf("Light Mode") >= 0) {
+      menuItems[i].textContent = (isDark ? "☀️ Light Mode" : "🎨 Dark Mode");
+    }
+  }
+}
+
+// Auto-restore theme on load
+(function() {
+  if (localStorage.getItem("gp45_theme") === "dark") {
+    document.body.classList.add("dark");
+    // Update menu text after DOM loads
+    setTimeout(function() {
+      var menuItems = document.querySelectorAll(".menu-item");
+      for (var i = 0; i < menuItems.length; i++) {
+        if (menuItems[i].textContent.indexOf("Dark Mode") >= 0 || menuItems[i].textContent.indexOf("Light Mode") >= 0) {
+          menuItems[i].textContent = "☀️ Light Mode";
+        }
+      }
+    }, 100);
+  }
+})();
+// ════════════════════════════════════════
+
+// ════════════════════════════════════════
+// PRICE CARD
+// ════════════════════════════════════════
+var pcCart = [];
+
+function showPriceCardPanel() {
+  closeMenu();
+  document.getElementById('pcOverlay').classList.add('show');
+  document.getElementById('pcSearch').value = '';
+  document.getElementById('pcResults').style.display = 'none';
+  document.getElementById('pcResults').innerHTML = '';
+  document.getElementById('pcName').value = '';
+  pcCart = [];
+  renderPCCart();
+  loadPCHistory();
+}
+
+function closePriceCard() {
+  document.getElementById('pcOverlay').classList.remove('show');
+}
+
+// PC search - from offline database
+document.getElementById('pcSearch').addEventListener('input', function() {
+  var val = this.value.trim().toLowerCase();
+  var res = document.getElementById('pcResults');
+  if (val.length < 2) { res.style.display = 'none'; res.innerHTML = ''; return; }
+  var found = [];
+  for (var i = 0; i < allItems.length; i++) {
+    var it = allItems[i];
+    if (it.n.toLowerCase().indexOf(val) >= 0 || it.b.toLowerCase().indexOf(val) >= 0) {
+      found.push(it);
+      if (found.length >= 30) break;
+    }
+  }
+  if (found.length === 0) {
+    res.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text2);font-size:13px">Barang tidak ditemukan</div>';
+    res.style.display = 'block';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < found.length; i++) {
+    var it = found[i];
+    var count = pcCart.filter(function(c) { return c.k === it.k; }).length;
+    if (count > 0) {
+      html += '<div class="pc-result-item"><div class="info"><div class="name">' + esc(it.n) + '</div><div class="sub">Rp' + Number(it.h || 0).toLocaleString('id-ID') + ' \u2022 ' + esc(it.m || '-') + '</div></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--green)">\u2714 ' + count + '</span><button class="pc-add-btn" onclick="pcAddItem(\'' + it.k + '\')">+</button></div></div>';
+    } else {
+      html += '<div class="pc-result-item"><div class="info"><div class="name">' + esc(it.n) + '</div><div class="sub">Rp' + Number(it.h || 0).toLocaleString('id-ID') + ' \u2022 ' + esc(it.m || '-') + '</div></div><button class="pc-add-btn" onclick="pcAddItem(\'' + it.k + '\')">+ Tambah</button></div>';
+    }
+  }
+  res.innerHTML = html;
+  res.style.display = 'block';
+});
+
+function pcAddItem(kode) {
+  var item = null;
+  for (var i = 0; i < allItems.length; i++) {
+    if (allItems[i].k === kode) { item = allItems[i]; break; }
+  }
+  if (!item) return;
+  pcCart.push({k: item.k, n: item.n, h: item.h, b: item.b, qty: 1});
+  showToast('\u2714 +1 ' + item.n.substring(0, 25));
+  renderPCCart();
+  var evt = document.createEvent('HTMLEvents'); evt.initEvent('input', false, true);
+  document.getElementById('pcSearch').dispatchEvent(evt);
+}
+
+function pcAdjustQty(kode, delta) {
+  var indices = [];
+  for (var i = 0; i < pcCart.length; i++) {
+    if (pcCart[i].k === kode) indices.push(i);
+  }
+  if (delta > 0) {
+    // Add copies
+    var ref = pcCart[indices[0]];
+    for (var j = 0; j < delta; j++) {
+      pcCart.push({k: ref.k, n: ref.n, h: ref.h, b: ref.b, qty: 1});
+    }
+  } else {
+    // Remove copies
+    var toRemove = Math.min(Math.abs(delta), indices.length);
+    for (var r = 0; r < toRemove; r++) {
+      var idx = -1;
+        for (var fi = 0; fi < pcCart.length; fi++) {
+          if (pcCart[fi].k === kode) { idx = fi; break; }
+        }
+      if (idx >= 0) pcCart.splice(idx, 1);
+    }
+  }
+  renderPCCart();
+  var evt = document.createEvent('HTMLEvents'); evt.initEvent('input', false, true);
+  document.getElementById('pcSearch').dispatchEvent(evt);
+}
+
+function pcRemoveItem(kode) {
+  pcCart = pcCart.filter(function(c) { return c.k !== kode; });
+  renderPCCart();
+  var evt = document.createEvent('HTMLEvents'); evt.initEvent('input', false, true);
+  document.getElementById('pcSearch').dispatchEvent(evt);
+}
+
+function renderPCCart() {
+  document.getElementById('pcCartCount').textContent = pcCart.length;
+  var el = document.getElementById('pcCartItems');
+  if (pcCart.length === 0) { el.innerHTML = '<div style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Belum ada item</div>'; document.getElementById('pcSaveBtn').disabled = true; return; }
+  document.getElementById('pcSaveBtn').disabled = false;
+  var groups = {};
+  for (var i = 0; i < pcCart.length; i++) {
+    var it = pcCart[i];
+    if (!groups[it.k]) groups[it.k] = {k: it.k, n: it.n, h: it.h, count: 0};
+    groups[it.k].count++;
+  }
+  var html = '';
+  for (var k in groups) {
+    var g = groups[k];
+    html += '<div class="pc-cart-item"><div class="info"><div class="name">' + esc(g.n) + '</div><div class="sub">Rp' + Number(g.h || 0).toLocaleString('id-ID') + '</div></div><div style="display:flex;align-items:center;gap:4px"><button class="pc-qty-btn" onclick="pcAdjustQty(\'' + k + '\',-1)">\u2212</button><span style="font-size:13px;font-weight:600;min-width:20px;text-align:center">' + g.count + '</span><button class="pc-qty-btn" onclick="pcAdjustQty(\'' + k + '\',1)">+</button><button class="pc-rm-btn" onclick="pcRemoveItem(\'' + k + '\')">\u2716</button></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function savePriceCard() {
+  var nama = document.getElementById('pcName').value.trim();
+  if (!nama) { showToast('\u26a0\ufe0f Isi nama price card'); document.getElementById('pcName').focus(); return; }
+  if (pcCart.length === 0) { showToast('\u26a0\ufe0f Belum ada item'); return; }
+  // Show confirmation panel
+  var groups = {};
+  for (var i = 0; i < pcCart.length; i++) { var it = pcCart[i]; if (!groups[it.k]) groups[it.k] = {n: it.n, h: it.h, count: 0}; groups[it.k].count++; }
+  var html = '<div class="pc-confirm-overlay" id="pcConfirmOverlay" onclick="if(event.target===this)closePCConfirm()"><div class="pc-confirm-panel"><div style="font-size:16px;font-weight:700;margin-bottom:8px">\ud83d\udcb0 Simpan Price Card</div>';
+  html += '<div style="font-size:13px;color:var(--text2);margin-bottom:10px">Nama: <b>' + esc(nama) + '</b></div>';
+  html += '<div style="font-size:12px;max-height:180px;overflow-y:auto;margin-bottom:8px">';
+  for (var k in groups) { var g = groups[k]; html += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:12px"><span>' + esc(g.n.substring(0,45)) + '</span><span style="font-weight:600">\u00d7 ' + g.count + '</span></div>'; }
+  html += '</div>';
+  html += '<div style="font-size:14px;font-weight:600;text-align:right;margin-bottom:12px">Total: ' + pcCart.length + ' label</div>';
+  html += '<div style="display:flex;gap:8px"><button class="pc-cancel-btn" onclick="closePCConfirm()">Batal</button><button class="pc-confirm-btn" onclick="doSavePriceCard(\'' + escAttr(nama) + '\')">\ud83d\udcbe Simpan</button></div></div></div>';
+  var d = document.createElement('div');
+  d.innerHTML = html;
+  document.body.appendChild(d);
+}
+
+function closePCConfirm() {
+  var el = document.getElementById('pcConfirmOverlay');
+  if (el) el.remove();
+}
+
+function doSavePriceCard(nama) {
+  closePCConfirm();
+  var btn = document.getElementById('pcSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  var items = [];
+  for (var i = 0; i < pcCart.length; i++) {
+    items.push({kode: pcCart[i].k, hjual: pcCart[i].h || 0, hmember: pcCart[i].h || 0, qty: 1});
+  }
+  fetch('http://192.168.6.200/grand.php?key=123&action=pricecard-save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({nama: nama, items: items, operator: 'user1'})
+  })
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.error)throw new Error(d.error);
+    showToast('✅ Tersimpan: ' + d.no_trans + ' (' + items.length + ' label)');
+    pcCart = []; renderPCCart();
+    document.getElementById('pcName').value = '';
+    loadPCHistory();
+    btn.disabled = false; btn.textContent = '\ud83d\udcbe Simpan ke Server';
+  })
+  .catch(function(err){
+    showToast('❌ Gagal: ' + (err.message||'unknown'));
+    btn.disabled = false; btn.textContent = '\ud83d\udcbe Simpan ke Server';
+  });
+}
+
+function loadPCHistory() {
+  var el = document.getElementById('pcHistoryList');
+  fetch('http://192.168.6.200/grand.php?key=123&action=pricecard-list')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d||d.length===0){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">Belum ada price card</div>';return;}
+      var html='';
+      for(var i=0;i<d.length&&i<20;i++){
+        var c=d[i];
+        html+='<div class="pc-history-item" onclick="viewPCDetail(\''+c.no_trans+'\')"><div class="info"><div class="name">'+esc(c.nama||'tanpa nama')+'</div><div class="sub">'+esc(c.no_trans)+' \u2022 '+c.Item+' item</div></div><button class="del-btn" onclick="event.stopPropagation();deletePC(\''+c.no_trans+'\',this)">\u2716</button></div>';
+      }
+      el.innerHTML=html;
+    })
+    .catch(function(){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--primary);font-size:13px">❌ Gagal memuat riwayat</div>';});
+}
+
+function viewPCDetail(noTrans) {
+  fetch('http://192.168.6.200/grand.php?key=123&action=pricecard-detail&no_trans='+noTrans)
+    .then(function(r){return r.json()})
+    .then(function(items){
+      if(!items||items.length===0){showToast('\ud83d\udced Tidak ada item');return;}
+      var html='<div class="pc-confirm-overlay" id="pcDetailOverlay" onclick="if(event.target===this)closePCDetail()"><div class="pc-confirm-panel" style="max-width:420px;max-height:80vh;overflow-y:auto">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html+='<div style="font-size:16px;font-weight:700">\ud83d\udcc4 '+noTrans+'</div>';
+      html+='<button onclick="closePCDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);padding:4px 8px">\u2716</button>';
+      html+='</div>';
+      html+='<div style="font-size:12px;color:var(--text2);margin-bottom:8px">'+items.length+' item</div>';
+      for(var i=0;i<items.length&&i<50;i++){
+        var it=items[i];
+        html+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px"><span>'+esc(it.nama||'')+'</span><span style="font-weight:600">Rp'+Number(it.hjual||0).toLocaleString('id-ID')+'</span></div>';
+      }
+      if(items.length>50)html+='<div style="text-align:center;font-size:11px;color:var(--text2);padding:4px">...dan '+(items.length-50)+' lainnya</div>';
+      html+='<button class="pc-cancel-btn" onclick="closePCDetail()" style="width:100%;margin-top:10px">Tutup</button>';
+      html+='</div></div>';
+      var d = document.createElement('div');
+      d.innerHTML = html;
+      document.body.appendChild(d);
+    })
+    .catch(function(){showToast('❌ Gagal');});
+}
+
+function closePCDetail() {
+  var el = document.getElementById('pcDetailOverlay');
+  if (el) el.remove();
+}
+
+function deletePC(noTrans, btn) {
+  // Fetch detail first
+  fetch('http://192.168.6.200/grand.php?key=123&action=pricecard-detail&no_trans='+noTrans)
+    .then(function(r){return r.json()})
+    .then(function(items){
+      var html = '<div class="pc-confirm-overlay" id="pcDelOverlay" onclick="if(event.target===this)closePCDel()"><div class="pc-confirm-panel"><div style="font-size:16px;font-weight:700;margin-bottom:6px;color:var(--primary)">\u26a0\ufe0f Hapus Price Card</div>';
+      html += '<div style="font-size:13px;color:var(--text2);margin-bottom:8px">No: <b>' + noTrans + '</b></div>';
+      html += '<div style="font-size:12px;max-height:150px;overflow-y:auto;margin-bottom:8px">';
+      if (items && items.length > 0) {
+        for (var i = 0; i < items.length && i < 30; i++) {
+          html += '<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid var(--border)"><span>' + esc((items[i].nama||'').substring(0,40)) + '</span><span>Rp' + Number(items[i].hjual||0).toLocaleString('id-ID') + '</span></div>';
+        }
+        if (items.length > 30) html += '<div style="text-align:center;font-size:11px;color:var(--text2);padding:4px">...dan ' + (items.length - 30) + ' lainnya</div>';
+      }
+      html += '</div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">' + (items ? items.length : 0) + ' item akan dihapus</div>';
+      html += '<div style="display:flex;gap:8px"><button class="pc-cancel-btn" onclick="closePCDel()">Batal</button><button class="pc-del-btn" onclick="doDeletePC(\'' + noTrans + '\')">\u2716 Ya, Hapus</button></div></div></div>';
+      var d = document.createElement('div');
+      d.innerHTML = html;
+      document.body.appendChild(d);
+    })
+    .catch(function(){showToast('❌ Gagal memuat detail');});
+}
+
+function closePCDel() {
+  var el = document.getElementById('pcDelOverlay');
+  if (el) el.remove();
+}
+
+function doDeletePC(noTrans) {
+  closePCDel();
+  fetch('http://192.168.6.200/grand.php?key=123&action=pricecard-delete&no_trans='+noTrans)
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.error)throw new Error(d.error);
+      showToast('✅ Dihapus');
+      loadPCHistory();
+    })
+    .catch(function(err){showToast('❌ '+err.message);});
+}
+
+function showOmsetPanel() { closeMenu(); document.getElementById("omsetOverlay").classList.add("show"); var d=localStorage.getItem("gp45_omset_lastdate"); if(d){document.getElementById("omsetDate").value=d;}else{document.getElementById("omsetDate").value=new Date().toISOString().slice(0,10);} var isBulan = document.getElementById("omsetBulanResult").style.display==="block"; if(!isBulan){var r=document.getElementById("omsetResult"); if(r.innerHTML.trim()===""){loadOmset();}} }
+function closeOmset() { var d=document.getElementById("omsetDate").value; if(d) localStorage.setItem("gp45_omset_lastdate",d); document.getElementById("omsetOverlay").classList.remove("show"); }
+function loadOmset() {
+  var bulanEl=document.getElementById("omsetBulanResult");
+  if(bulanEl){bulanEl.style.display="none";}
+  var hrEl=document.getElementById("omsetResult");
+  if(hrEl){hrEl.style.display="block";}
+  var tabBtn=document.getElementById("omsetTabBtn");
+  var bulanBtn=document.getElementById("omsetBulanBtn");
+  if(tabBtn) tabBtn.classList.add("active");
+  if(bulanBtn) bulanBtn.classList.remove("active");
+  var date=document.getElementById("omsetDate").value;
+  if(!date) date=new Date().toISOString().slice(0,10);
+  var area=document.getElementById("omsetResult");
+  area.innerHTML='<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">⏳ Mengambil omset...</div>';
+  
+  function fetchOmset(url,fallbackUrl,fallbackBody){
+    var timedOut = false;
+    var tid = setTimeout(function(){ timedOut = true; }, 12000);
+    return fetch(url)
+      .then(function(r){ if(timedOut)throw new Error('Timeout'); clearTimeout(tid); return r.json(); })
+      .catch(function(err){
+        clearTimeout(tid);
+        if(fallbackUrl && !timedOut){
+          return fetch(fallbackUrl,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(fallbackBody)
+          }).then(function(r){return r.json()}).then(function(d){
+            if(d&&d.error)throw new Error(d.error);
+            return d;
+          });
+        }
+        if(timedOut) throw new Error('Server tidak merespon');
+        throw err;
+      });
+  }
+  
+  fetchOmset(gpApi('omset', 'date='+date), null, {action:'omset',date:date})
+    .then(function(data){
+      var area=document.getElementById("omsetResult");
+      if(!data||!data.sales){area.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">\uD83d\udced Tidak ada data penjualan</div>';return;}
+      var sales=data.sales||[];var gr=data.grand_total||0;var gt=data.total_trans||0;
+      
+      // Load setting from localStorage
+      var settJson=localStorage.getItem("gp45_omset_v2");
+      var sett=settJson?JSON.parse(settJson):{l1_target:4285714,l2_target:3333333,l1_sales:["Brayen","Darren","Raydel","Pricilia","Franklyn","Genio"],l2_sales:["Mario","Johanes","Rivaldo","Moors"],inactive_sales:["Reagen","Yoshua"]};
+      if(!sett.l1_target) sett.l1_target=4285714;
+      if(!sett.l2_target) sett.l2_target=3333333;
+      if(!sett.l1_sales) sett.l1_sales=[];
+      if(!sett.l2_sales) sett.l2_sales=[];
+      if(!sett.inactive_sales) sett.inactive_sales=[];
+      
+      // Build lookup maps
+      var l1map={}, l2map={}, inactmap={};
+      for(var si=0;si<sett.l1_sales.length;si++) l1map[(sett.l1_sales[si]||"").toLowerCase()]=true;
+      for(var si=0;si<sett.l2_sales.length;si++) l2map[(sett.l2_sales[si]||"").toLowerCase()]=true;
+      for(var si=0;si<sett.inactive_sales.length;si++) inactmap[(sett.inactive_sales[si]||"").toLowerCase()]=true;
+      
+      var h='<div style="margin:8px 0 4px;font-size:11px;color:var(--text2);font-weight:600">\uD83d\udcc5 '+date+'</div>';
+      var rows="";
+      var totalAll=0, totalTrans=0;
+      
+      for(var i=0;i<sales.length;i++){
+        var r=sales[i];
+        var nm=(r.sales||"").toLowerCase();
+        var j=Number(r.total||0);
+        if(j<=0) continue;
+        if(inactmap[nm]) continue;
+        
+        var target=0;
+        if(l1map[nm]){ target=sett.l1_target; }
+        else if(l2map[nm]){ target=sett.l2_target; }
+        
+        var persen = target>0 ? ((j/target)*100).toFixed(1) : "";
+        var persenStr = persen ? ' <span style="display:inline-block;min-width:48px;text-align:center;background:'+(parseFloat(persen)>=95?'var(--green-bg)':'var(--red-bg)')+';color:'+(parseFloat(persen)>=95?'var(--green)':'var(--primary)')+';font-weight:800;font-size:13px;padding:2px 8px;border-radius:8px;border:1px solid '+(parseFloat(persen)>=95?'var(--green)':'var(--primary)')+';">'+persen+'%</span>' : '';
+        
+        rows+='<div class="omset-row oset-click" data-sales="'+escAttr(r.sales||'')+'" data-date="'+date+'" style="cursor:pointer">'
+          +'<span class="name">▶ '+esc(r.sales||"")+'</span>'
+          +'<span class="value">'+(r.trans||0)+' Trx \u2022 '+(r.items||0)+' item \u2014 Rp'+j.toLocaleString("id-ID")+persenStr+'</span>'
+          +'</div>';
+        totalAll+=j;
+        totalTrans+=Number(r.trans||0);
+      }
+      
+      if(!rows){
+        h+='<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">\uD83d\udced Tidak ada data penjualan</div>';
+      } else {
+        h+='<div class="omset-total"><span>💰 Grand Total</span><span>'+totalTrans+' trans \u2014 Rp'+Number(totalAll).toLocaleString("id-ID")+'</span></div>';
+        h+=rows;
+      }
+      area.innerHTML=h;
+    })
+    .catch(function(err){
+      var area=document.getElementById("omsetResult");
+      area.innerHTML='<div style="text-align:center;color:var(--primary);font-size:13px">❌ '+esc(err.message||'Gagal mengambil omset')+'</div>';
+    });
+}
+
+function omsetDetail(sales,date,el){
+  var parent = el.parentNode;
+  var existing = parent.querySelector('.omset-detail');
+  if (existing) {
+    if (el.nextElementSibling === existing) { existing.remove(); return; }
+    existing.remove();
+  }
+  var div=document.createElement('div');
+  div.className='omset-detail';
+  div.style.cssText='padding:8px 12px;background:var(--bg);border-radius:8px;margin:2px 0 6px;font-size:12px;line-height:1.7';
+  div.innerHTML='<div style="text-align:center;color:var(--text2)">⏳ Mengambil detail penjualan...</div>';
+  el.parentNode.insertBefore(div,el.nextSibling);
+
+      function fetchOmsetDetail(url,fallbackUrl,fallbackBody){
+    var timedOut = false;
+    var tid = setTimeout(function(){ timedOut = true; }, 12000);
+    return fetch(url)
+      .then(function(r){ if(timedOut)throw new Error('Timeout'); clearTimeout(tid); if(!r.ok)throw new Error('HTTP '+r.status); return r.json(); })
+      .catch(function(err){
+        clearTimeout(tid);
+        if(fallbackUrl && !timedOut){
+          return fetch(fallbackUrl,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(fallbackBody)
+          }).then(function(r){return r.json()}).then(function(d){
+            if(d&&d.error)throw new Error(d.error);
+            return d;
+          });
+        }
+        if(timedOut) throw new Error('Server tidak merespon');
+        throw err;
+      });
+  }
+  
+  fetchOmsetDetail(
+    'http://192.168.6.200/grand.php?key=123&action=omset-detail&q='+encodeURIComponent(sales)+'&date='+encodeURIComponent(date),
+    null,
+    {action:'omset-detail',q:sales,date:date}
+  )
+    .then(function(items){renderOmsetDetail(div,items)})
+    .catch(function(err){
+      div.innerHTML='<div style="text-align:center;color:var(--primary)">❌ '+esc(err.message||'Gagal mengambil detail')+'</div>';
+    });
+}
+
+function renderOmsetDetail(div,items){
+  if(!items||items.length===0){
+    div.innerHTML='<div style="text-align:center;color:var(--text2)">Tidak ada transaksi</div>';return;
+  }
+  if(!Array.isArray(items))items=items.items||[items];
+  var hh='';
+  for(var i=0;i<items.length&&i<30;i++){
+    var it=items[i];
+    hh+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>'+esc(it.Nama||it.nama||'')+'</span><span style="font-weight:600">'+(it.Qty||it.qty||0)+'x Rp'+Number(it.Jumlah||it.jumlah||0).toLocaleString('id-ID')+'</span></div>';
+  }
+  if(items.length>30)hh+='<div style="text-align:center;color:var(--text2);margin-top:4px">...dan '+(items.length-30)+' lainnya</div>';
+  div.innerHTML=hh;
+}
+
+function showAbout() { closeMenu(); document.getElementById("aboutOverlay").classList.add("show"); }
+function closeAbout() { document.getElementById("aboutOverlay").classList.remove("show"); }
+
+function showManual() {
+  closeMenu();
+  document.getElementById("manualOverlay").classList.add("show");
+  localStorage.setItem("gp45_first_launch", "1");
+}
+function closeManual() {
+  document.getElementById("manualOverlay").classList.remove("show");
+}
+
+function syncData() {
+  if (isLoading) { showToast('⏳ Tunggu loading selesai'); return; }
+  // Show sync overlay
+  document.getElementById('syncOverlay').classList.add('show');
+  document.getElementById('syncLoading').style.display = 'block';
+  document.getElementById('syncResult').style.display = 'none';
+  document.getElementById('syncError').style.display = 'none';
+  document.getElementById('syncRetryBtn').style.display = 'none';
+  document.getElementById('syncIcon').textContent = '🔄';
+  document.getElementById('syncTitle').textContent = 'Sync Database';
+  document.getElementById('syncSub').textContent = 'Mendownload data terbaru...';
+  document.getElementById('syncStatus').textContent = 'Menghubungi server...';
+  document.getElementById('syncBar').style.width = '10%';
+  document.getElementById('syncProgressText').textContent = 'Mengirim request...';
+  
+  var syncUrl = 'http://192.168.6.200/grand.php?key=123&action=sync';
+  var oldCount = allItems.length;
+  var oldItems = [];
+  // Save a copy of old items for comparison
+  for (var i = 0; i < allItems.length && i < 50; i++) oldItems.push(allItems[i]);
+  
+  var syncController = new AbortController(); window._syncController = syncController;
+  var syncTimeout = setTimeout(function() { syncController.abort(); }, 120000);
+  fetch(syncUrl, { signal: syncController.signal })
+    .then(function(r) { clearTimeout(syncTimeout);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      document.getElementById('syncBar').style.width = '30%';
+      document.getElementById('syncStatus').textContent = 'Membaca data...';
+      return r.json();
+    })
+    .then(function(data) {
+      document.getElementById('syncBar').style.width = '50%';
+      document.getElementById('syncStatus').textContent = 'Menyimpan ke database lokal...';
+      
+      var items = data.items || data;
+      if (!items || items.length === 0) throw new Error('Tidak ada data');
+      
+      // Map to internal format
+      var mapped = [];
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        mapped.push({
+          k: it.Kode || '',
+          n: it.Nama || '',
+          b: it.Barcode || '',
+          b2: it.Barcode2 || '',
+          s: it.Satuan || '',
+          h: it.HJual || 0,
+          h2: it.HJual2 || 0,
+          h3: it.HJual3 || 0,
+          hm: it.HMember || 0,
+          hb: it.HBeli || 0,
+          q: it.Stok || 0,
+          m: it.Merek || ''
+        });
+      }
+      
+      // Compute comparison
+      var newCount = mapped.length;
+      var oldByKode = {};
+      for (var i = 0; i < allItems.length; i++) {
+        oldByKode[allItems[i].k] = allItems[i];
+      }
+      var newByKode = {};
+      for (var i = 0; i < mapped.length; i++) {
+        newByKode[mapped[i].k] = mapped[i];
+      }
+      
+      var oldKodes = Object.keys(oldByKode);
+      var newKodes = Object.keys(newByKode);
+      var added = [];
+      var removed = [];
+      var kept = 0;
+      var priceChanged = 0;
+      var stockChanged = 0;
+      var priceSamples = [];
+      
+      for (var i = 0; i < newKodes.length; i++) {
+        var k = newKodes[i];
+        if (oldByKode[k]) {
+          kept++;
+          var oldItem = oldByKode[k];
+          var newItem = newByKode[k];
+          if (oldItem.h !== newItem.h) {
+            priceChanged++;
+            if (priceSamples.length < 5) {
+              priceSamples.push({n: oldItem.n, old: oldItem.h, nw: newItem.h});
+            }
+          }
+          if (oldItem.q !== newItem.q) stockChanged++;
+        } else {
+          added.push(k);
+        }
+      }
+      for (var i = 0; i < oldKodes.length; i++) {
+        if (!newByKode[oldKodes[i]]) removed.push(oldKodes[i]);
+      }
+      
+      var stockSamples = [];
+      var allPriceChanges = [];
+      
+      for (var i = 0; i < newKodes.length; i++) {
+        var k = newKodes[i];
+        if (oldByKode[k]) {
+          var oldItem = oldByKode[k];
+          var newItem = newByKode[k];
+          if (oldItem.h !== newItem.h) {
+            allPriceChanges.push({k: k, n: oldItem.n, old: oldItem.h, nw: newItem.h});
+          }
+          if (oldItem.q !== newItem.q && stockSamples.length < 20) {
+            stockSamples.push({k: k, n: oldItem.n, old: oldItem.q, nw: newItem.q});
+          }
+        }
+      }
+      
+      var now = new Date();
+      
+      // Save detailed changes to localStorage
+      var detailData = {
+        time: now.toLocaleString('id-ID'),
+        price_changes: allPriceChanges.slice(0, 30),
+        stock_changes: stockSamples.slice(0, 20),
+        total_price: priceChanged,
+        total_stock: stockChanged,
+        added: added.length,
+        removed: removed.length
+      };
+      localStorage.setItem('gp45_sync_detail', JSON.stringify(detailData));
+      
+      var timeStr = now.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' + now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+      
+      // Get last update time
+      var lastUpdate = localStorage.getItem('gp45_lu_v26') || '';
+      var lastUpdateStr = 'sebelumnya';
+      if (lastUpdate) {
+        var d = new Date(parseInt(lastUpdate));
+        if (!isNaN(d.getTime())) lastUpdateStr = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+      }
+      
+      // Save to IndexedDB
+      var req = indexedDB.open('GP45Offline', 1);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('stock')) db.createObjectStore('stock', {keyPath:'k'});
+      };
+      req.onsuccess = function(e) {
+        var db = e.target.result;
+        var tx = db.transaction('stock', 'readwrite');
+        var store = tx.objectStore('stock');
+        store.clear();
+        for (var i = 0; i < mapped.length; i++) store.put(mapped[i]);
+        tx.oncomplete = function() {
+          db.close();
+          allItems = mapped;
+          localStorage.setItem('gp45_lu_v26', Date.now().toString());
+          
+          // Save sync history
+          var now = new Date();
+          var timeStr = now.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' + now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+          saveSyncHistory({
+            time: timeStr,
+            items: newCount,
+            price_changes: priceChanged,
+            stock_changes: stockChanged,
+            added: added.length,
+            removed: removed.length,
+            kept: kept
+          });
+          
+          // Update UI
+          var count = document.getElementById('itemCount');
+          if (count) count.textContent = mapped.length.toLocaleString() + ' items';
+          var status = document.getElementById('statusText');
+          if (status) status.textContent = mapped.length.toLocaleString() + ' items [offline]';
+          var aboutDb = document.getElementById('aboutDbCount');
+          if (aboutDb) aboutDb.textContent = mapped.length.toLocaleString() + ' item';
+          
+          // Show result
+          document.getElementById('syncIcon').textContent = '✅';
+          document.getElementById('syncTitle').textContent = 'Sinkron Berhasil!';
+          document.getElementById('syncSub').textContent = mapped.length.toLocaleString() + ' item dari server';
+          document.getElementById('syncLoading').style.display = 'none';
+          document.getElementById('syncResult').style.display = 'block';
+          
+          document.getElementById('syncOldCount').textContent = oldCount.toLocaleString();
+          document.getElementById('syncNewCount').textContent = newCount.toLocaleString();
+          // Update status bar time
+          updateLastUpdateDisplay();
+          document.getElementById('syncOldDate').textContent = lastUpdateStr;
+          document.getElementById('syncNewDate').textContent = timeStr;
+          document.getElementById('syncSize').textContent = (oldCount * 170).toLocaleString() + ' KB → ' + (newCount * 228).toLocaleString() + ' KB';
+          document.getElementById('syncPriceChange').textContent = priceChanged + ' item';
+          document.getElementById('syncStockChange').textContent = stockChanged + ' item';
+          document.getElementById('syncAdded').textContent = added.length;
+          document.getElementById('syncRemoved').textContent = removed.length;
+          document.getElementById('syncKept').textContent = kept;
+          
+          if (priceSamples.length > 0) {
+            document.getElementById('syncSampleChanges').style.display = 'block';
+            var html = '';
+            for (var i = 0; i < priceSamples.length; i++) {
+              var s = priceSamples[i];
+              var diff = s.nw - s.old;
+              html += '<div>' + s.n.substring(0, 40) + ': Rp' + Number(s.old).toLocaleString('id-ID') + ' → Rp' + Number(s.nw).toLocaleString('id-ID') + ' <span style="color:' + (diff > 0 ? '#d97706' : 'var(--green)') + '">(' + (diff > 0 ? '+' : '') + Number(diff).toLocaleString('id-ID') + ')</span></div>';
+            }
+            document.getElementById('syncSampleList').innerHTML = html;
+          }
+          
+          // Start outlet stock sync (async, separate) with timeout
+          (function() {
+            var otController = new AbortController();
+            var otTimer = setTimeout(function() { otController.abort(); }, 90000);
+            document.getElementById('syncStatus').textContent = 'Mendownload stok outlet...';
+            fetch('http://192.168.6.200/grand.php?key=123&action=sync_outlet_stock', { signal: otController.signal })
+              .then(function(r) { clearTimeout(otTimer); return r.json(); })
+              .then(function(od) {
+                if (od && od.stocks) {
+                  var codes = Object.keys(od.stocks);
+                  var savedCount = 0;
+                  var maxSave = codes.length;
+                  var totalSave = codes.length;
+                  document.getElementById('syncStatus').textContent = 'Menyimpan ' + totalSave + ' stok outlet...';
+                  for (var i = 0; i < codes.length && i < maxSave; i++) {
+                    var kode = codes[i];
+                    var sk = od.stocks[kode];
+                    if (sk && typeof sk === 'object') {
+                      var stocks = {};
+                      var stockKeys = Object.keys(sk);
+                      for (var j = 0; j < stockKeys.length; j++) {
+                        stocks[stockKeys[j]] = sk[stockKeys[j]];
+                      }
+                      try { saveOutletStockLocal(kode, stocks); savedCount++; } catch(e) { break; }
+                    }
+                    // Update progress every 5000 items
+                    if (i % 5000 === 0 && i > 0) {
+                      document.getElementById('syncStatus').textContent = 'Menyimpan ' + i + '/' + totalSave + ' stok outlet...';
+                    }
+                  }
+                  document.getElementById('syncSub').textContent = mapped.length.toLocaleString() + ' item + ' + savedCount + ' outlet stock';
+                  document.getElementById('syncStatus').textContent = 'Selesai! ' + savedCount + ' item stok outlet tersimpan';
+                }
+              })
+              .catch(function() {
+                // Outlet stock sync failed silently - not critical
+              });
+          })();
+          
+          document.getElementById('syncRetryBtn').style.display = 'block';
+          document.getElementById('syncRetryBtn').textContent = '🔄 Sync Lagi';
+        };
+        tx.onerror = function() {
+          db.close();
+          showSyncError('Gagal menyimpan ke database lokal');
+        };
+      };
+      req.onerror = function() {
+        showSyncError('Gagal membuka database');
+      };
+    })
+    .catch(function(err) {
+      if (err.name === 'AbortError') { closeSync(); return; }
+      showSyncError(err.message);
+    });
+}
+
+function showSyncError(msg) {
+  document.getElementById('syncLoading').style.display = 'none';
+  document.getElementById('syncResult').style.display = 'none';
+  document.getElementById('syncError').style.display = 'block';
+  document.getElementById('syncErrorMsg').textContent = msg;
+  document.getElementById('syncIcon').textContent = '❌';
+  document.getElementById('syncTitle').textContent = 'Sinkron Gagal';
+  document.getElementById('syncSub').textContent = 'Cek koneksi ke server 200';
+  document.getElementById('syncRetryBtn').style.display = 'block';
+  document.getElementById('syncRetryBtn').textContent = '🔄 Coba Lagi';
+}
+
+function timeAgo(ts) {
+  if (!ts) return 'tidak diketahui';
+  var d = new Date(parseInt(ts));
+  if (isNaN(d.getTime())) return 'tidak diketahui';
+  var now = new Date();
+  var diff = now - d;
+  var mins = Math.floor(diff / 60000);
+  var hours = Math.floor(diff / 3600000);
+  var days = Math.floor(diff / 86400000);
+  if (mins < 1) return 'baru saja';
+  if (mins < 60) return mins + ' menit lalu';
+  if (hours < 24) return hours + ' jam lalu';
+  if (days < 7) return days + ' hari lalu';
+  var weeks = Math.floor(days / 7);
+  if (weeks < 4) return weeks + ' minggu lalu';
+  return days + ' hari lalu';
+}
+
+function getSyncHistory() {
+  try { return JSON.parse(localStorage.getItem('gp45_sync_history')) || []; }
+  catch(e) { return []; }
+}
+
+function saveSyncHistory(entry) {
+  var history = getSyncHistory();
+  history.unshift(entry);
+  if (history.length > 20) history = history.slice(0, 20);
+  localStorage.setItem('gp45_sync_history', JSON.stringify(history));
+}
+
+function renderDbInfo() {
+  var items = document.getElementById('dbInfoItems');
+  var time = document.getElementById('dbInfoTime');
+  var badge = document.getElementById('dbInfoBadge');
+  
+  if (items) items.textContent = allItems.length.toLocaleString() + ' item';
+  
+  var stored = localStorage.getItem('gp45_lu_v26');
+  if (stored) {
+    var d = new Date(parseInt(stored));
+    if (!isNaN(d.getTime())) {
+      var dateStr = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+      var timeStr = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+      if (time) time.textContent = dateStr + ' ' + timeStr;
+      
+      if (badge) {
+        var diff = Date.now() - d.getTime();
+        var hours = Math.floor(diff / 3600000);
+        badge.style.display = 'inline-block';
+        if (hours < 6) {
+          badge.className = 'badge ok';
+          badge.textContent = timeAgo(stored);
+        } else if (hours < 48) {
+          badge.className = 'badge old';
+          badge.textContent = timeAgo(stored);
+        } else {
+          badge.className = 'badge stale';
+          badge.textContent = timeAgo(stored);
+        }
+      }
+    } else {
+      if (time) time.textContent = 'tidak diketahui';
+    }
+  } else {
+    if (time) time.textContent = 'belum pernah sync';
+  }
+  
+  // Show last sync detail
+}
+
+function renderSyncDetail() {
+  // Now handled in openSyncHistory overlay
+}
+
+function showAllSyncChanges() {
+  try {
+    var detail = JSON.parse(localStorage.getItem('gp45_sync_detail'));
+    if (!detail) { showToast('\u26a0\ufe0f Tidak ada data sync'); return; }
+    var html = '<div class="pc-confirm-overlay" id="syncAllOverlay" onclick="if(event.target===this)closeSyncAll()"><div class="pc-confirm-panel" style="max-width:420px">';
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:8px">\ud83d\udcca Semua Perubahan</div>';
+    
+    // Price changes
+    var pc = detail.price_changes || [];
+    var sc = detail.stock_changes || [];
+    
+    if (pc.length > 0) {
+      html += '<div style="font-size:12px;font-weight:600;margin:6px 0 4px;color:var(--text2)">\ud83c\udff7\ufe0f Harga Berubah (' + (detail.total_price || pc.length) + '):</div>';
+      html += '<div style="max-height:160px;overflow-y:auto;font-size:11px">';
+      for (var i = 0; i < pc.length; i++) {
+        var c = pc[i];
+        var diff = c.nw - c.old;
+        html += '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border)"><span>' + (c.n||'').substring(0,40) + '</span><span style="font-weight:600;color:' + (diff > 0 ? '#d97706' : 'var(--green)') + '">Rp' + Number(c.old).toLocaleString('id-ID') + ' \u2192 Rp' + Number(c.nw).toLocaleString('id-ID') + '</span></div>';
+      }
+      html += '</div>';
+    }
+    
+    if (sc.length > 0) {
+      html += '<div style="font-size:12px;font-weight:600;margin:8px 0 4px;color:var(--text2)">\ud83d\udce6 Stok Berubah (' + (detail.total_stock || sc.length) + '):</div>';
+      html += '<div style="max-height:120px;overflow-y:auto;font-size:11px">';
+      for (var i = 0; i < sc.length; i++) {
+        var c = sc[i];
+        var diff = c.nw - c.old;
+        html += '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--border)"><span>' + (c.n||'').substring(0,35) + '</span><span style="font-weight:600;color:' + (diff > 0 ? 'var(--green)' : 'var(--primary)') + '">' + Number(c.old).toLocaleString() + ' \u2192 ' + Number(c.nw).toLocaleString() + '</span></div>';
+      }
+      html += '</div>';
+    }
+    
+    if (pc.length === 0 && sc.length === 0) {
+      html += '<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px">Tidak ada perubahan</div>';
+    }
+    
+    html += '<div style="display:flex;gap:8px;margin-top:12px"><button class="pc-cancel-btn" onclick="closeSyncAll()">Tutup</button></div></div></div>';
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    document.body.appendChild(d);
+  } catch(e) { showToast('❌ ' + e.message); }
+}
+
+function closeSyncAll() {
+  var el = document.getElementById('syncAllOverlay');
+  if (el) el.remove();
+}
+
+function closeSyncHistory() {
+  document.getElementById('syncHistOverlay').style.display = 'none';
+}
+
+function openSyncHistory() {
+  var overlay = document.getElementById('syncHistOverlay');
+  var content = document.getElementById('syncHistContent');
+  if (!overlay || !content) return;
+  overlay.style.display = 'flex';
+  var html = '';
+  
+  // Sync button only (close is in header)
+  html += '<div style="margin-bottom:10px">' +
+    '<button class="sync-btn" onclick="syncData();closeSyncHistory()" style="width:100%;padding:14px;font-size:15px;font-weight:800">🔄 Update Database</button>' +
+    '</div>';
+  
+  // Compact summary bar
+  var lu = localStorage.getItem('gp45_lu_v26');
+  if (lu) {
+    var d = new Date(parseInt(lu));
+    if (!isNaN(d.getTime())) {
+      html += '<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:10px;font-size:11px;display:flex;justify-content:space-between;align-items:center">' +
+        '<span>📦 <b>' + (allItems.length || 0).toLocaleString() + '</b> item</span>' +
+        '<span style="color:var(--text2);font-size:10px">🕐 ' + d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) + '</span>' +
+        '</div>';
+    }
+  } else {
+    html += '<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:10px;font-size:11px;display:flex;justify-content:space-between">' +
+      '<span>📦 <b>' + (allItems.length || 0).toLocaleString() + '</b> item</span>' +
+      '<span style="color:var(--text2)">🕐 Belum sync</span>' +
+      '</div>';
+  }
+  
+  // Last sync result - compact counts
+  try {
+    var detail = JSON.parse(localStorage.getItem('gp45_sync_detail'));
+    if (detail) {
+      html += '<div style="margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:10px">' +
+        '<div style="font-size:12px;font-weight:600;margin-bottom:4px">📊 Hasil Sync Terakhir</div>' +
+        '<div style="font-size:11px;color:var(--text2);display:flex;flex-wrap:wrap;gap:4px 12px">' +
+        '<span>🏷️ <b>' + (detail.total_price || 0) + '</b></span>' +
+        '<span>📦 <b>' + (detail.total_stock || 0) + '</b></span>' +
+        '<span>✨ +<b>' + (detail.added || 0) + '</b></span>' +
+        '<span>❌ -<b>' + (detail.removed || 0) + '</b></span>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text2);margin-top:2px">' + (detail.time || '') + '</div>' +
+        '</div>';
+    }
+  } catch(e) {}
+  
+  // Scrollable history list
+  var history = getSyncHistory();
+  html += '<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">📋 Riwayat Sync</div>';
+  html += '<div style="max-height:260px;overflow-y:auto;padding-right:4px">';
+  if (history.length === 0) {
+    html += '<div style="font-size:12px;color:var(--text2);padding:20px 0;text-align:center">Belum ada riwayat sync</div>';
+  } else {
+    for (var i = 0; i < history.length; i++) {
+      var e = history[i];
+      var extras = '';
+      if (e.price_changes > 0) extras += ' 🏷️ ' + e.price_changes;
+      if (e.stock_changes > 0) extras += ' 📦 ' + e.stock_changes;
+      if (e.added > 0) extras += ' ✨ +' + e.added;
+      if (e.removed > 0) extras += ' ❌ -' + e.removed;
+      html += '<div style="font-size:11px;padding:7px 8px;border-bottom:1px solid var(--border)">' +
+        '<div style="font-weight:600">' + (e.time || '') + '</div>' +
+        '<div style="color:var(--text2);font-size:10px;margin-top:2px">' + (e.items || 0).toLocaleString() + ' item' + extras + '</div></div>';
+    }
+  }
+  html += '</div>';
+  
+  content.innerHTML = html;
+}
+
+function updateLastUpdateDisplay() {
+  var dot = document.getElementById('statusDot');
+  var age = document.getElementById('dataAge');
+  if (!dot) return;
+  var stored = localStorage.getItem('gp45_lu_v26');
+  if (!stored) { dot.style.background = '#9ca3af'; if (age) age.textContent = ''; return; }
+  var d = new Date(parseInt(stored));
+  if (isNaN(d.getTime())) { dot.style.background = '#9ca3af'; if (age) age.textContent = ''; return; }
+  var timeStr = d.toLocaleDateString('id-ID', {day:'numeric', month:'short'}) + ' ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  if (age) age.textContent = timeStr;
+  var now = new Date();
+  var days = Math.floor((now - d) / 86400000);
+  if (days < 1) dot.style.background = '#16a34a';      // 🟢 Fresh
+  else if (days < 3) dot.style.background = '#d97706';  // 🟡 Warning
+  else dot.style.background = "#dc2626";                 // 🔴 Old
+}
+
+function showDataAge() {
+  var stored = localStorage.getItem('gp45_lu_v26');
+  if (!stored) return showToast('Data offline: belum pernah sync');
+  var d = new Date(parseInt(stored));
+  if (isNaN(d.getTime())) return showToast('Data offline: tanggal tidak valid');
+  var timeStr = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  var ago = timeAgo(stored);
+  showToast('📦 Data offline: ' + timeStr + ' (' + ago + ')');
+}
+
+function pingServer200() {
+  var dot = document.getElementById('connDot');
+  var label = document.getElementById('connLabel');
+  var pingEl = document.getElementById('connPing');
+  if (!dot || !label) return;
+  
+  dot.style.background = '#9ca3af';
+  dot.style.animation = 'connPulse 1s ease-in-out infinite';
+  label.textContent = '⏳ Mengetes koneksi ke server 200...';
+  pingEl.textContent = '';
+  
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
+  var start = Date.now();
+  fetch('http://192.168.6.200/grand.php?key=123&action=sync', { method:'GET', signal: controller.signal })
+    .then(function(r) {
+      clearTimeout(timeoutId);
+      var ms = Date.now() - start;
+      dot.style.animation = '';
+      if (r.ok) {
+        if (ms < 120) { dot.style.background = '#16a34a'; label.textContent = '✅ Server 200 terhubung'; }
+        else if (ms < 500) { dot.style.background = '#d97706'; label.textContent = '⚠️ Server 200 lambat'; }
+        else { dot.style.background = "#dc2626"; label.textContent = '🐢 Server 200 sangat lambat'; }
+        pingEl.textContent = ms + 'ms';
+      } else {
+        dot.style.background = "#dc2626"; label.textContent = '❌ Server 200 error'; pingEl.textContent = '';
+      }
+    })
+    .catch(function(err) {
+      clearTimeout(timeoutId);
+      dot.style.background = "#dc2626";
+      label.textContent = err.name === 'AbortError' ? '⏰ Server 200 timeout' : '❌ Server 200 tidak terjangkau';
+      pingEl.textContent = '';
+    });
+}
+
+// Offline outlet stock storage
+
+function showBranchStock(containerId, item, kode) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  if (!kode && item) kode = item.k || item.b;
+  if (!kode) { container.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text2)">Tidak ada kode</div>'; return; }
+  
+  // Generate safe id
+  var safeId = kode.replace(/[^a-zA-Z0-9]/g, '_');
+  
+  // Render 3-source card
+  container.innerHTML = '<div class="bs-grid">' +
+    '<div class="bs-card offline"><div class="bs-label">📦 Offline</div><div class="bs-content" id="bs_off_' + safeId + '">⏳ Memuat...</div></div>' +
+    '<div class="bs-card server"><div class="bs-label">🌐 Server 200</div><div class="bs-content" id="bs_srv_' + safeId + '">⏳ Memuat...</div></div>' +
+    '<div class="bs-card relay" style="display:none"><div class="bs-label">📡 Relay</div><div class="bs-content" id="bs_rly_' + safeId + '">⏳ Memuat...</div></div>' +
+    '</div>';
+  
+  // Source 1: Offline (immediate)
+  (function() {
+    var el = document.getElementById('bs_off_' + safeId);
+    if (!el) return;
+    var saved = loadOutletStockLocal(kode);
+    if (saved && saved.stocks) {
+      var h = renderOutletStockHTML(saved.stocks, saved.ts);
+      el.innerHTML = h || '<div class="bs-empty">Tidak ada data offline</div>';
+    } else if (item && item.q !== undefined) {
+      // Fallback: show main stock from database
+      var mainStok = {};
+      mainStok['GP45 (Pusat)'] = Number(item.q) || 0;
+      var h = renderOutletStockHTML(mainStok, Date.now());
+      el.innerHTML = h || '<div class="bs-empty">Stok: ' + Number(item.q).toFixed(0) + '</div>';
+      el.innerHTML += '<div style="font-size:9px;color:var(--text2);margin-top:4px">💡 Data outlet stock belum di-sync. Tampil stok pusat.</div>';
+    } else {
+      el.innerHTML = '<div class="bs-empty">Belum ada data outlet</div>';
+    }
+  })();
+  
+  // Source 2: Server 200
+  (function() {
+    var el = document.getElementById('bs_srv_' + safeId);
+    if (!el) return;
+    el.innerHTML = '<div class="bs-loading">⏳ Mengambil dari server 200...</div>';
+    var controller = new AbortController();
+    var tid = setTimeout(function() { controller.abort(); }, 15000);
+    var start = Date.now();
+    fetch('http://192.168.6.200/grand.php?key=123&action=detail&kode=' + encodeURIComponent(kode), { signal: controller.signal })
+      .then(function(r) { clearTimeout(tid); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d) {
+        if (d.error) throw new Error(d.error);
+        var stocks = {}; stocks['GP45'] = Number(d.Stok || 0);
+        if (d.stocks) { for (var key in d.stocks) stocks[key] = Number(d.stocks[key]) || 0; }
+        saveOutletStockLocal(kode, stocks);
+        var h = renderOutletStockHTML(stocks, Date.now());
+        el.innerHTML = h || '<div class="bs-empty">Tidak ada data</div>';
+        var ms = Date.now() - start;
+        el.innerHTML += '<div class="bs-time">🌐 ' + ms + 'ms</div>';
+      })
+      .catch(function(err) {
+        if (err.name === 'AbortError') {
+          el.innerHTML = '<div class="bs-error">⏱ Server 200 terlalu lambat (timeout 15 detik)</div>';
+        } else {
+          el.innerHTML = '<div class="bs-error">❌ ' + esc(err.message) + '</div>';
+        }
+        // Source 3: Try relay as fallback only if server fails
+        var rlyEl = document.getElementById('bs_rly_' + safeId);
+        if (rlyEl && rlyEl.innerHTML.indexOf('Memuat') > -1) {
+          rlyEl.innerHTML = '<div class="bs-loading">⏳ Relay sebagai cadangan...</div>';
+          var rlyUrl = getRelayUrl();
+          if (rlyUrl) {
+            var rc = new AbortController();
+            var rtid = setTimeout(function() { rc.abort(); }, 10000);
+            fetch(rlyUrl + '?key=gp45relay&live=1&action=detail&kode=' + encodeURIComponent(kode), { signal: rc.signal })
+              .then(function(r) { clearTimeout(rtid); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+              .then(function(d) {
+                if (d.error) throw new Error(d.error);
+                var stocks = {}; stocks['GP45'] = Number(d.Stok || 0);
+                if (d.stocks) { for (var key in d.stocks) stocks[key] = Number(d.stocks[key]) || 0; }
+                saveOutletStockLocal(kode, stocks);
+                var h = renderOutletStockHTML(stocks, Date.now());
+                rlyEl.innerHTML = h || '<div class="bs-empty">Tidak ada data</div>';
+              })
+              .catch(function(e) {
+                rlyEl.innerHTML = '<div class="bs-error">❌ ' + (e.message || 'Relay gagal') + '</div>';
+              });
+          }
+        }
+      });
+  })();
+  
+  // Source 3: Initial state (will be loaded if server fails)
+  (function() {
+    var el = document.getElementById('bs_rly_' + safeId);
+    if (el) el.innerHTML = '<div class="bs-loading">⏳ Menunggu...</div>';
+  })();
+}
+
+function saveOutletStockLocal(kode, stocks) {
+  if (!kode || !stocks) return;
+  try {
+    var key = 'gp45_ostock_' + kode.replace(/[^a-zA-Z0-9]/g, '_');
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), stocks: stocks }));
+  } catch(e) { /* localStorage full - ignore */ }
+}
+
+function loadOutletStockLocal(kode) {
+  if (!kode) return null;
+  try {
+    var key = 'gp45_ostock_' + kode.replace(/[^a-zA-Z0-9]/g, '_');
+    var raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function renderOutletStockHTML(stocks, ts) {
+  if (!stocks) return null;
+  var names = { 'GP45': 'GP45 (Pusat)' };
+  var total = 0;
+  var keys = Object.keys(stocks);
+  if (keys.length === 0) return null;
+  var h = '';
+  if (keys.length > 1) {
+    h += '<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--text2)">📍 Stok Per Cabang</div>';
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var qty = Number(stocks[k]) || 0;
+      total += qty;
+      var nm = names[k] || ('Outlet ' + k);
+      h += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>' + nm + '</span><span style="font-weight:700;color:' + (qty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + qty.toFixed(0) + '</span></div>';
+    }
+    h += '<div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:4px;font-size:13px;font-weight:700;border-top:2px solid var(--primary);color:var(--text)"><span>📊 Total Semua</span><span style="color:var(--primary)">' + total.toFixed(0) + '</span></div>';
+  } else {
+    var k = keys[0];
+    var nm = names[k] || ('Outlet ' + k);
+    total = Number(stocks[k]) || 0;
+    h += '<div style="margin-top:8px;font-size:13px;color:var(--text2);text-align:center">' + nm + ': <b>' + total.toFixed(0) + '</b></div>';
+  }
+  if (ts) {
+    var diff = Math.floor((Date.now() - ts) / 1000);
+    var ago = diff < 60 ? diff + ' detik' : diff < 3600 ? Math.floor(diff/60) + ' menit' : diff < 86400 ? Math.floor(diff/3600) + ' jam' : Math.floor(diff/86400) + ' hari';
+    h += '<div style="font-size:10px;color:var(--text2);text-align:right;margin-top:4px">🕐 ' + ago + ' yang lalu</div>';
+  }
+  return h;
+}
+
+function pingRelay() {
+  var dot = document.getElementById('connDot');
+  var label = document.getElementById('connLabel');
+  var pingEl = document.getElementById('connPing');
+  if (!dot || !label) return;
+  
+  var url = getRelayUrl();
+  if (!url) {
+    dot.style.background = '#9ca3af'; label.textContent = '⏸️ Relay: atur URL dulu'; pingEl.textContent = '';
+    return;
+  }
+  
+  dot.style.background = '#9ca3af';
+  dot.style.animation = 'connPulse 1s ease-in-out infinite';
+  label.textContent = '⏳ Mengetes relay...';
+  pingEl.textContent = '';
+  
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+  var start = Date.now();
+  fetch(url + '?key=gp45relay&action=status', {
+    method: 'GET',
+    signal: controller.signal
+  })
+    .then(function(r) {
+      clearTimeout(timeoutId);
+      var ms = Date.now() - start;
+      dot.style.animation = '';
+      if (r.ok) {
+        if (ms < 500) { dot.style.background = '#16a34a'; label.textContent = '✅ Relay terhubung'; }
+        else if (ms < 2000) { dot.style.background = '#d97706'; label.textContent = '⚠️ Relay lambat'; }
+        else { dot.style.background = "#dc2626"; label.textContent = '🐢 Relay sangat lambat'; }
+        pingEl.textContent = ms + 'ms';
+      } else {
+        dot.style.background = "#dc2626"; label.textContent = '❌ Relay error ' + r.status; pingEl.textContent = '';
+      }
+    })
+    .catch(function(err) {
+      clearTimeout(timeoutId);
+      dot.style.background = "#dc2626";
+      label.textContent = err.name === 'AbortError' ? '⏰ Relay timeout' : '❌ Relay tidak terjangkau';
+      pingEl.textContent = '';
+    })
+    .then(function() {
+      // Auto fence removed
+    });
+}
+function cancelSync() {
+  if (window._syncController) {
+    try { window._syncController.abort(); } catch(e) {}
+    window._syncController = null;
+  }
+  closeSync();
+}
+function closeSync() {
+  document.getElementById('syncOverlay').classList.remove('show');
+}
+function checkNetwork(url) {
+  var netEl = document.getElementById("syncNetStatus");
+  var actionBtn = document.getElementById("syncActionBtn");
+  var ac = new AbortController();
+  setTimeout(function() { ac.abort(); }, 4000);
+  fetch(url.replace("/sync-json","") + "/api/offline", { method:"HEAD", signal:ac.signal })
+    .then(function(r) {
+      netEl.innerHTML = "✅ <b>Terhubung</b> ke server lokal";
+      netEl.style.color = "#16a34a";
+      if (actionBtn) { actionBtn.textContent = "🔍 Check Server Database"; actionBtn.disabled = false; }
+    })
+    .catch(function() {
+      netEl.innerHTML = "❌ <b>Tidak terhubung</b> ke jaringan lokal<br><span style='font-size:11px'>Pastikan HP terhubung ke WiFi lokal (192.168.6.x)</span>";
+      netEl.style.color = "#dc2626";
+      if (actionBtn) { actionBtn.textContent = "🔍 Coba Lagi"; actionBtn.disabled = false; }
+    });
+
+}
+function checkSyncServer() {
+  var syncUrl = 'http://192.168.6.200/grand.php?key=123&action=sync';
+  var btn = document.getElementById('syncActionBtn');
+  var srvSection = document.getElementById('syncServerSection');
+  var srvInfo = document.getElementById('syncServerInfo');
+  
+  btn.disabled = true;
+  btn.textContent = '⏳ Menghubungi server...';
+  srvSection.style.display = 'none';
+  
+  fetch(syncUrl)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      if (data && data.success && data.data) {
+        var total = data.total || data.data.length;
+        var sizeMB = (JSON.stringify(data.data).length / (1024*1024)).toFixed(1);
+        var elapsed = data.time || '?';
+        
+        srvSection.style.display = 'block';
+        srvInfo.innerHTML = 
+          '<div class="about-row"><span>Items</span><span>' + total.toLocaleString() + '</span></div>' +
+          '<div class="about-row"><span>Size</span><span>' + sizeMB + ' MB</span></div>' +
+          '<div class="about-row"><span>Waktu query</span><span>' + elapsed + ' detik</span></div>' +
+          '<div class="about-row"><span>Server</span><span>' + (data.server || '200') + '</span></div>';
+        
+        // Compare with local
+        var diff = total - allItems.length;
+        if (diff !== 0) {
+          srvInfo.innerHTML += '<div style="margin-top:8px;padding:8px;background:#fef3c7;border-radius:6px;font-size:12px;text-align:center;color:#92400e">⚠️ ' + 
+            (diff > 0 ? '+' : '') + diff.toLocaleString() + ' item berbeda dari lokal</div>';
+        } else {
+          srvInfo.innerHTML += '<div style="margin-top:8px;padding:8px;background:#d1fae5;border-radius:6px;font-size:12px;text-align:center;color:#065f46">✅ Data sudah terbaru</div>';
+        }
+        
+        btn.textContent = '📥 Download & Update (' + sizeMB + ' MB)';
+        btn.onclick = function() { doSync(syncUrl); };
+      } else {
+        throw new Error('Invalid response');
+      }
+    })
+    .catch(function(err) {
+      srvSection.style.display = 'block';
+      srvSection.style.background = '#fef2f2';
+      srvInfo.innerHTML = '❌ Gagal: ' + esc(err.message) + '<br><span style="font-size:11px;color:#6b7280">Pastikan server running di 192.168.6.200</span>';
+      btn.textContent = '🔄 Coba Lagi';
+    })
+    .then(function() { btn.disabled = false; }, function() { btn.disabled = false; });
+}
+
+function doSync(syncUrl) {
+  var overlay = document.getElementById('syncOverlay');
+  overlay.innerHTML = '<div class="sync-panel">' +
+    '<div class="spinner"></div>' +
+    '<div class="sync-status-text">Downloading data...</div>' +
+    '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill sync-bar-fill" style="width:0%"></div></div>' +
+    '<div class="sync-progress-text">Memulai download...</div></div>';
+  
+  // Helper to update sync UI elements without conflicting IDs
+  function setSyncStatus(t) { var e = overlay.querySelector('.sync-status-text'); if(e) e.textContent = t; }
+  function setSyncBar(w) { var e = overlay.querySelector('.sync-bar-fill'); if(e) e.style.width = w; }
+  function setSyncProgress(t) { var e = overlay.querySelector('.sync-progress-text'); if(e) e.textContent = t; }
+  
+  fetch(syncUrl)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      setSyncBar('20%');
+      setSyncStatus('Menerima data...');
+      return r.json();
+    })
+    .then(function(data) {
+      if (!data || !data.success || !data.data) {
+        throw new Error(data && data.error ? data.error : 'Response invalid');
+      }
+      setSyncBar('50%');
+      setSyncStatus('Memproses ' + data.data.length.toLocaleString() + ' items...');
+      // Replace all items
+      allItems = data.data;
+      // Save to IndexedDB
+      setSyncProgress('Menyimpan ke database lokal...');
+      return saveToIndexedDB(allItems).then(function() {
+        setSyncBar('90%');
+        setSyncStatus('Menyimpan...');
+        return new Promise(function(r) { setTimeout(r, 300); });
+      }).then(function() {
+        // Save timestamp
+        localStorage.setItem('gp45_lu_v26', Date.now().toString());
+        
+        setSyncBar('100%');
+        setSyncStatus('✅ Selesai! ' + allItems.length.toLocaleString() + ' items diperbarui');
+        setSyncProgress('Memuat ulang aplikasi...');
+        
+        setTimeout(function() {
+          overlay.classList.remove('show');
+          showToast('✅ Sync selesai! ' + allItems.length.toLocaleString() + ' items');
+          resetSyncOverlay();
+          setTimeout(function() { window.location.reload(); }, 500);
+        }, 1000);
+      });
+    })
+    .catch(function(e) {
+      setSyncStatus('❌ Gagal: ' + e.message);
+      setSyncBar('0%');
+      setSyncProgress('');
+      setTimeout(function() {
+        overlay.classList.remove('show');
+        showToast('❌ Sync gagal');
+        resetSyncOverlay();
+      }, 2000);
+    });
+}
+
+function resetSyncOverlay() {
+  var overlay = document.getElementById('syncOverlay');
+  overlay.innerHTML = '<div class="sync-panel">' +
+    '<div class="spinner"></div>' +
+    '<div class="sync-status-text">Starting...</div>' +
+    '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill sync-bar-fill" style="width:0%"></div></div>' +
+    '<div class="sync-progress-text">Downloading latest data from server</div></div>';
+}
+function saveToIndexedDB(items) {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('GP45Offline', 1);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('stock')) { db.createObjectStore('stock', {keyPath:'k'}); }
+    };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      var tx = db.transaction('stock', 'readwrite');
+      var store = tx.objectStore('stock');
+      store.clear();
+      for (var i = 0; i < items.length; i++) { store.put(items[i]); }
+      tx.oncomplete = function() { db.close(); resolve(); };
+      tx.onerror = function(err) { db.close(); reject(err); };
+    };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+// Load from IndexedDB first
+var originalLoadData = loadData;
+loadData = function() {
+  var req = indexedDB.open('GP45Offline', 1);
+  req.onsuccess = function(e) {
+    var db = e.target.result;
+    if (!db.objectStoreNames.contains('stock')) { db.close(); originalLoadData(); return; }
+    var tx = db.transaction('stock', 'readonly');
+    var store = tx.objectStore('stock');
+    var countReq = store.count();
+    countReq.onsuccess = function() {
+      if (countReq.result > 0) {
+        var getAll = store.getAll();
+        getAll.onsuccess = function() {
+          allItems = getAll.result; db.close();
+          document.getElementById('loadingSection').style.display = 'none';
+          document.getElementById('statusText').textContent = allItems.length.toLocaleString() + ' items • cached';
+          document.getElementById('itemCount').textContent = '📦 ' + allItems.length.toLocaleString();
+          document.getElementById('searchInput').disabled = false;
+          document.getElementById('searchInput').focus();
+          setTimeout(function() {
+          }, 600);
+        };
+        getAll.onerror = function() { db.close(); originalLoadData(); };
+      } else { db.close(); originalLoadData(); }
+    };
+    countReq.onerror = function() { db.close(); originalLoadData(); };
+  };
+  req.onerror = function() { originalLoadData(); };
+  req.onupgradeneeded = function(e) {
+    var db = e.target.result;
+    if (!db.objectStoreNames.contains('stock')) { db.createObjectStore('stock', {keyPath:'k'}); }
+  };
+};
+
+// ════════════════════════════════════════
+// SERVER 81 SEARCH
+// ════════════════════════════════════════
+
+// Online search: fetch from server, show in suggestions
+function doServer81SearchProgressive(query) {
+  if (!query || query.trim().length < 1) { doClearSearch(); return; }
+  
+  var el = document.getElementById('suggestions');
+  el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)"><div class="spin" style="margin:0 auto 8px"></div>🌐 Mencari di server...</div>';
+  el.classList.add('show');
+  
+  fetch('http://192.168.6.200/grand.php?key=123&action=cari&q=' + encodeURIComponent(query.trim()))
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(items) {
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">❌ Barang tidak ditemukan di server<br><small>Coba kata kunci lain</small></div>';
+        return;
+      }
+      // Map server fields to internal format - filter by all keywords (AND)
+      var keywords = query.trim().toLowerCase().split(/[\s,]+/).filter(function(kw) { return kw.length > 0; });
+      var mapped = [];
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (!it.Kode) continue;
+        // Filter by all keywords (server uses AND already, but double-check)
+        var n = (it.Nama || '').toLowerCase();
+        var matchAll = keywords.every(function(kw) { return n.indexOf(kw) !== -1; });
+        if (!matchAll) continue;
+        mapped.push({
+          k: it.Kode || '',
+          n: it.Nama || '',
+          b: it.Barcode || '',
+          h: it.HJual || 0,
+          q: it.Stok || 0,
+          m: it.Merek || '',
+          s: it.Satuan || ''
+        });
+      }
+      if (mapped.length === 0) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">❌ Barang tidak ditemukan</div>';
+        return;
+      }
+      // Sort: stock > 0 first
+      mapped.sort(function(a,b) {
+        var sa = parseFloat(a.q) || 0;
+        var sb = parseFloat(b.q) || 0;
+        if (sa > 0 && sb <= 0) return -1;
+        if (sa <= 0 && sb > 0) return 1;
+        return 0;
+      });
+      window._lastResults = mapped;
+      var h = '';
+      for (var i = 0; i < Math.min(mapped.length, 50); i++) {
+        var it = mapped[i];
+        var price = it.h > 0 ? 'Rp' + Number(it.h).toLocaleString('id-ID') : '-';
+        var sc = it.q > 0 ? 'avail' : 'empty';
+        var sl = it.q > 0 ? Number(it.q).toFixed(0) : '0';
+        h += '<div class="item" onclick="selectItem(' + i + ')"><div class="info"><div class="name">' + esc(it.n) + '</div><div class="bcode">' + esc(it.b || '') + ' | ' + esc(it.m || '') + '</div></div><div class="price">' + price + '</div><div class="stock ' + sc + '">' + sl + '</div></div>';
+      }
+      el.innerHTML = h;
+      el.classList.add('show');
+    })
+    .catch(function(err) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--primary)">❌ Gagal: ' + esc(err.message) + '</div>';
+      showToast('Online error: ' + err.message);
+    });
+}
+
+function doServer81Search(query) {
+  if (!query || query.trim().length < 1) { doClearSearch(); return; }
+  var area = document.getElementById('liveArea');
+  area.innerHTML = '<div class="live-loading"><div class="spin"></div>Mencari <strong>' + esc(query) + '</strong> di server...</div>';
+  
+  fetch('http://192.168.6.200/grand.php?key=123&action=cari&q=' + encodeURIComponent(query.trim()))
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(items) {
+      if (!items || items.length === 0) {
+        area.innerHTML = '<div class="live-error">❌ Barang tidak ditemukan di server</div>';
+        return;
+      }
+      var h = '<div style="font-size:11px;color:var(--text2);padding:8px 0 4px;font-weight:500">Ditemukan ' + items.length + ' barang</div>';
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var price = it.HJual > 0 ? 'Rp' + Number(it.HJual).toLocaleString('id-ID') : '-';
+        var sc = it.Stok > 0 ? '' : 'empty';
+        var bcode = it.Barcode || '';
+        var name = esc(it.Nama);
+        var kod = esc(it.Kode);
+        h += '<div class="live-item" onclick="showServer81Detail(\'' + kod + '\',\'' + esc(bcode) + '\')">' +
+          '<div class="info"><div class="name">' + name + '</div><div class="bcode">' + esc(bcode || '') + ' | ' + esc(it.Merek || '') + ' <span style="background:#e8f5e9;padding:1px 6px;border-radius:4px;font-size:9px;color:var(--green)">' + esc(it.outlet || '') + '</span></div></div>' +
+          '<div class="price">' + price + '</div>' +
+          '<div class="stock ' + sc + '">' + Number(it.q || 0).toFixed(0) + '</div></div>';
+      }
+      area.innerHTML = h;
+    })
+    .catch(function(err) {
+      area.innerHTML = '<div class="live-error">❌ Gagal konek server: ' + esc(err.message) + '</div>';
+    });
+}
+
+function showServer81Result(item) {
+  // Show item detail in resultCard (like OFFLINE) + fetch branch stock from server
+  var card = document.getElementById('resultCard');
+  var sc = item.q > 0 ? 'avail' : 'empty';
+  var sl = item.q > 0 ? '✅ Stok: ' + Number(item.q).toFixed(0) + ' ' + (item.s || '') : '❌ Stok Habis';
+  
+  var extras = '';
+  if (item.hb > 0) extras += '<div class="cell"><div class="lbl">Harga Beli</div><div class="val">Rp' + Number(item.hb).toLocaleString('id-ID') + '</div></div>';
+  if (item.m && item.m.trim()) extras += '<div class="cell"><div class="lbl">Merek</div><div class="val">' + esc(item.m) + '</div></div>';
+  if (item.h2 > 0) extras += '<div class="cell"><div class="lbl">HJual 2</div><div class="val">Rp' + Number(item.h2).toLocaleString('id-ID') + '</div></div>';
+  if (item.h3 > 0) extras += '<div class="cell"><div class="lbl">HJual 3</div><div class="val">Rp' + Number(item.h3).toLocaleString('id-ID') + '</div></div>';
+  
+  card.innerHTML = 
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + esc(item.n) + '</div><button class="copy-np-btn" data-nama="' + escAttr(item.n) + '" data-harga="' + Number(item.h || 0).toLocaleString('id-ID') + '" style="flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:8px;line-height:1" title="Salin nama + harga">📋</button></div>' +
+    '<div class="price-section">' +
+      '<div class="price-big"><span class="rp">Rp</span>' + Number(item.h || 0).toLocaleString('id-ID') + '</div>' +
+    '</div>' +
+    '<div class="stock-row ' + sc + '">' + sl + '</div>' +
+    '<div class="info-grid">' + extras + '</div>' +
+    '<div id="onlineBranchStock" style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;text-align:center;font-size:13px;color:var(--text2)">🔄 Mengambil stok cabang...</div>';
+  
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+  // Show search history below card (OFFLINE tab)
+  if (currentMode === 'localdb' || currentMode === 'offline') {
+    var hb = document.getElementById('historyBelow');
+    if (hb) hb.style.display = 'block';
+    SearchHistory.render('historyBelowList');
+  } else {
+    var hb = document.getElementById('historyBelow');
+    if (hb) hb.style.display = 'none';
+  }
+  
+  // Branch stock: 3 sources (offline, server 200, relay)
+  var q = item.k || item.b;
+  showBranchStock('onlineBranchStock', q);
+}
+
+function showServer81Detail(kode, barcode) {
+  var q = barcode || kode;
+  var area = document.getElementById('liveArea');
+  area.innerHTML = '<div class="live-loading"><div class="spin"></div>Mengambil detail...</div>';
+  
+  fetch('http://192.168.6.200/grand.php?key=123&action=detail&kode=' + encodeURIComponent(q))
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      SearchHistory.save({k: d.Kode, n: d.Nama, h: d.HJual, b: d.Barcode});
+      var sc = d.Stok > 0 ? 'avail' : 'empty';
+      var sl = d.Stok > 0 ? '✅ Stok: ' + Number(d.Stok).toFixed(0) + ' ' + (d.Satuan || '') : '❌ Stok Habis';
+      var info = '<div class="cell"><div class="lbl">Kode</div><div class="val">' + esc(d.Kode) + '</div></div>';
+      info += '<div class="cell"><div class="lbl">Barcode</div><div class="val">' + esc(d.Barcode || '-') + '</div></div>';
+      if (d.Barcode2) info += '<div class="cell"><div class="lbl">Barcode 2</div><div class="val">' + esc(d.Barcode2) + '</div></div>';
+      info += '<div class="cell"><div class="lbl">Satuan</div><div class="val">' + esc(d.Satuan || '-') + '</div></div>';
+      info += '<div class="cell"><div class="lbl">Merek</div><div class="val">' + esc(d.Merek || '-') + '</div></div>';
+      info += '<div class="cell"><div class="lbl">Harga Beli</div><div class="val">Rp' + Number(d.HBeli || 0).toLocaleString('id-ID') + '</div></div>';
+      info += '<div class="cell"><div class="lbl">Harga Jual</div><div class="val" style="color:var(--primary);font-size:16px;font-weight:700">Rp' + Number(d.HJual || 0).toLocaleString('id-ID') + '</div></div>';
+      if (d.HJual2 > 0) info += '<div class="cell"><div class="lbl">Harga Jual 2</div><div class="val">Rp' + Number(d.HJual2).toLocaleString('id-ID') + '</div></div>';
+      if (d.HJual3 > 0) info += '<div class="cell"><div class="lbl">Harga Jual 3</div><div class="val">Rp' + Number(d.HJual3).toLocaleString('id-ID') + '</div></div>';
+      if (d.HMember > 0) info += '<div class="cell"><div class="lbl">Harga Member</div><div class="val">Rp' + Number(d.HMember).toLocaleString('id-ID') + '</div></div>';
+      // GP45 stock = d.Stok
+      var gp45_qty = Number(d.Stok || 0);
+      var cabang = [];
+      var total_cabang = gp45_qty;
+      cabang.push({code:'GP45', name:'GP45 (Pusat)', qty:gp45_qty});
+      if (d.stocks) {
+        for (var key in d.stocks) {
+          if (key === 'GP45') continue;
+          var qty = Number(d.stocks[key]) || 0;
+          total_cabang += qty;
+          cabang.push({code:key, name:('Outlet ' + key), qty:qty});
+        }
+      }
+      if (cabang.length > 1) {
+        info += '<div class="detail-title" style="margin-top:8px;font-size:13px;font-weight:600;color:var(--text2)">📍 Stok Per Cabang</div>';
+        for (var i = 0; i < cabang.length; i++) {
+          var c = cabang[i];
+          var cqty = Number(c.qty) || 0;
+          info += '<div class="cell"><div class="lbl">' + esc(c.name) + '</div><div class="val" style="font-weight:600;color:' + (cqty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + cqty.toFixed(0) + '</div></div>';
+        }
+        info += '<div class="cell full" style="margin-top:4px;border-top:2px solid var(--primary);padding-top:8px"><div class="lbl" style="font-weight:700">📊 Total Semua</div><div class="val" style="font-size:16px;font-weight:700;color:var(--primary)">' + total_cabang.toFixed(0) + '</div></div>';
+      } else {
+        info += '<div class="cell" style="grid-column:1/-1"><div class="lbl">Stok GP45 (Pusat)</div><div class="val" style="font-size:16px;font-weight:700;color:' + (gp45_qty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + gp45_qty.toFixed(0) + '</div></div>';
+      }
+      area.innerHTML = 
+        '<div style="padding:12px 16px">' +
+        '<button class="back-btn" onclick="backToServer81Results()">← Kembali ke hasil</button>' +
+        '<div class="result-card show" style="margin:0">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + esc(d.Nama) + '</div><button class="copy-np-btn" data-nama="' + escAttr(d.Nama) + '" data-harga="' + Number(d.HJual || 0).toLocaleString('id-ID') + '" style="flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:8px;line-height:1" title="Salin nama + harga">📋</button></div>' +
+        '<div class="stock-row ' + sc + '" style="margin:8px 0">' + sl + '</div>' +
+        '<div class="detail-title">📋 Informasi Lengkap</div>' +
+        '<div class="detail-grid">' + info + '</div></div></div>';
+    })
+    .catch(function(err) {
+      area.innerHTML = '<div class="live-error">❌ Gagal: ' + esc(err.message) + '</div>';
+    });
+}
+
+function backToServer81Results() {
+  var q = document.getElementById('searchInput').value;
+  doServer81Search(q);
+}
+
+// ════════════════════════════════════════
+// SCANNER
+// ════════════════════════════════════════
+
+function toggleScanner() {
+  if (scannerActive) { stopScanner(); return; }
+  document.getElementById('scannerContainer').classList.add('show');
+  setTimeout(function() { startScanner(); }, 300);
+}
+
+function startScanner() {
+  scannerActive = true;
+  if (html5QrCode) { try { html5QrCode.stop(); } catch(e) {} try { html5QrCode.clear(); } catch(e) {} }
+  try {
+    html5QrCode = new Html5Qrcode('scannerElement');
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      { fps: 8, 
+        videoConstraints: { facingMode: "environment", focusMode: "continuous", width: { ideal: 640 }, height: { ideal: 480 } },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E
+        ]
+      },
+      onScanSuccess, function() {}
+    ).then(function() {
+      if (!localStorage.getItem("gp45_first_launch")) showManual();
+    })
+    .catch(function(e) {
+      showToast('Camera: ' + e.message);
+      scannerActive = false;
+      if (!localStorage.getItem("gp45_first_launch")) showManual();
+    });
+  } catch(e) { scannerActive = false; }
+}
+
+function toggleTorch() {
+  torchOn = !torchOn;
+  try {
+    var video = document.querySelector('#scannerElement video');
+    if (video && video.srcObject) {
+      var track = video.srcObject.getVideoTracks()[0];
+      if (track) {
+        track.applyConstraints({ advanced: [{ torch: torchOn }] });
+      }
+    }
+  } catch(e) {}
+  var btn = document.getElementById('torchBtn');
+  if (btn) {
+    if (torchOn) { btn.classList.add('on'); btn.textContent = '⛱ Matikan'; }
+    else { btn.classList.remove('on'); btn.textContent = '⛱ Lampu'; }
+  }
+}
+
+function stopScanner() {
+  scannerActive = false;
+  if (torchOn) { torchOn = false;
+    try { var v = document.querySelector('#scannerElement video'); if(v&&v.srcObject){var t=v.srcObject.getVideoTracks()[0];if(t)t.applyConstraints({advanced:[{torch:false}]});} } catch(e){} }
+
+  if (html5QrCode) { try { html5QrCode.stop(); } catch(e) {} try { html5QrCode.clear(); } catch(e) {} }
+  document.getElementById('scannerContainer').classList.remove('show');
+}
+
+function playBeep() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1200;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function onScanSuccess(decodedText) {
+  playBeep();
+  try { navigator.vibrate(100); } catch(e) {}
+  stopScanner();
+  document.getElementById('searchInput').value = decodedText;
+  document.getElementById('clearBtn').classList.add('show');
+  
+  if (currentMode === 'server81') {
+    doServer81SearchProgressive(decodedText);
+    setTimeout(function() {
+      var r = window._lastResults;
+      if (r && r.length > 0) selectItem(0);
+      else showToast('Barcode tidak ditemukan di server');
+    }, 500);
+  } else {
+    var results = searchItems(decodedText);
+    if (results.length > 0) { showSuggestions(results); selectItem(0); }
+    else { showToast('Barcode tidak ditemukan'); }
+  }
+}
+
+// ════════════════════════════════════════
+// SWIPE TO CHANGE TAB
+// ════════════════════════════════════════
+
+var tabOrder = ['localdb', 'server81'];
+var touchStartX = 0;
+var touchStartY = 0;
+
+// Swipe on page but NOT on search bar (biar scrolling/scrolling gak ganti tab)
+document.addEventListener('touchstart', function(e) {
+  touchStartX = e.touches[0].screenX;
+  touchStartY = e.touches[0].screenY;
+}, {passive: true});
+
+document.addEventListener('touchend', function(e) {
+  // Skip if touch started on search input or search section
+  var target = e.target;
+  while (target) {
+    if (target.id === 'searchInput' || target.classList.contains('search-section') || target.closest('.search-wrap')) return;
+    target = target.parentElement;
+  }
+  
+  var deltaX = e.changedTouches[0].screenX - touchStartX;
+  var deltaY = e.changedTouches[0].screenY - touchStartY;
+  
+  // Only horizontal swipe, ignore vertical scroll
+  if (Math.abs(deltaY) > Math.abs(deltaX) * 1.5) return;
+  if (Math.abs(deltaX) < 40) return;
+  
+  var currentIdx = tabOrder.indexOf(currentMode);
+  if (currentIdx === -1) return;
+  
+  if (deltaX < 0) {
+    // Swipe left → next tab
+    if (currentIdx < tabOrder.length - 1) setMode(tabOrder[currentIdx + 1]);
+  } else {
+    // Swipe right → prev tab
+    if (currentIdx > 0) setMode(tabOrder[currentIdx - 1]);
+  }
+}, {passive: true});
+
+// ════════════════════════════════════════
+// SEARCH INPUT HANDLER
+// ════════════════════════════════════════
+
+document.getElementById('searchInput').addEventListener('focus', function() {
+  SearchHistory.render();
+});
+
+document.getElementById('searchInput').addEventListener('blur', function() {
+});
+
+document.getElementById('searchInput').addEventListener('input', function() {
+
+  var val = this.value.trim();
+  document.getElementById('clearBtn').classList.toggle('show', val.length > 0);
+  clearTimeout(searchTimeout);
+  clearTimeout(liveTimeout);
+  
+  if (val.length < 1) {
+    document.getElementById('suggestions').classList.remove('show');
+    document.getElementById('resultCard').classList.remove('show');
+    doClearSearch();
+    SearchHistory.render();
+    return;
+  }
+  
+  if (currentMode === 'relay') {
+    // RELAY: search via custom URL
+    liveTimeout = setTimeout(function() { doRelaySearch(val); }, 300);
+  } else if (currentMode === 'server81') {
+    // ONLINE: live search from server with progressive fallback
+    liveTimeout = setTimeout(function() { doServer81SearchProgressive(val); }, 300);
+  } else {
+    // offline or localdb - both use offline data
+    searchTimeout = setTimeout(function() { showSuggestions(searchItems(val)); }, 120);
+  }
+});
+
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (currentMode === 'server81') {
+      clearTimeout(liveTimeout); doServer81SearchProgressive(this.value.trim());
+    } else {
+      var r = window._lastResults; if (r && r.length > 0) selectItem(0);
+    }
+  }
+});
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+// ════════════════════════════════════════
+// INIT - first launch manual moved to after camera permission
+// ════════════════════════════════════════
+loadData();
+
+// ════════════════════════════════════════
+// RELAY MODE - Cloudflare Worker (POST JSON)
+// ════════════════════════════════════════
+
+function saveRelayUrl() {
+  var url = document.getElementById('relayUrlInput').value.trim();
+  if (!url) {
+    document.getElementById('relayStatus').textContent = '🔴 Masukkan URL server relay';
+    return;
+  }
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  localStorage.setItem('gp45_relay_url', url);
+  document.getElementById('relayStatus').textContent = '✅ Server: ' + url;
+  showToast('URL relay disimpan');
+}
+
+function getRelayUrl() {
+  var u = localStorage.getItem('gp45_relay_url');
+  if (!u) { u = 'https://gp45-relay.xmoritzu.workers.dev/'; localStorage.setItem('gp45_relay_url', u); }
+  return u;
+}
+
+function doRelaySearch(query) {
+  var area = document.getElementById('liveArea');
+  var url = getRelayUrl();
+  if (!url) {
+    area.innerHTML = '<div class="live-error">❌ Atur dulu URL server relay di input di atas</div>';
+    return;
+  }
+  
+  if (!query || query.trim().length < 1) {
+    area.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text2);font-size:14px"><span style="font-size:48px;display:block;margin-bottom:12px">📡</span>Cari barang via relay server<br><span style="font-size:12px">Akses dari mana saja!</span></div>';
+    return;
+  }
+  
+  area.innerHTML = '<div class="live-loading"><div class="spin"></div>🌐 Mencari di relay server...</div>';
+  
+  var searchController = new AbortController();
+  var searchTimeoutId = setTimeout(function() { searchController.abort(); }, 30000);
+  fetch(url + '?key=gp45relay&live=1&action=cari&q=' + encodeURIComponent(query.trim()), {
+    method: 'GET',
+    signal: searchController.signal
+  })
+    .then(function(r) { clearTimeout(searchTimeoutId); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      var items = data && data.items ? data.items : (data || []);
+      if (!items || items.length === 0) {
+        area.innerHTML = '<div class="live-error">❌ Barang tidak ditemukan</div>';
+        return;
+      }
+      var h = '<div style="margin-bottom:8px;font-size:12px;color:var(--text2)">Ditemukan ' + items.length + ' barang</div>';
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var name = esc(it.nama || it.Nama || '');
+        var kod = esc(it.kode || it.Kode || '');
+        var bcode = esc(it.barcode || it.BarcodeAktif || it.Barcode || '');
+        var price = (it.harga_jual || it.HJual) > 0 ? 'Rp' + Number(it.harga_jual || it.HJual).toLocaleString('id-ID') : '-';
+        var stok = it.stok || it.qty || it.QtyAkhir || 0;
+        var sc = stok > 0 ? '' : 'empty';
+        h += '<div class="live-item" onclick="showRelayDetail(\'' + kod + '\')">' +
+          '<div class="info"><div class="name">' + name + '</div><div class="bcode">' + bcode + '</div></div>' +
+          '<div class="price">' + price + '</div>' +
+          '<div class="stock ' + sc + '">' + Number(stok).toFixed(0) + '</div></div>';
+      }
+      area.innerHTML = h;
+    })
+    .catch(function(err) {
+      clearTimeout(searchTimeoutId);
+      area.innerHTML = '<div class="live-error">❌ Gagal: ' + esc(err.message) + '<br><small>Cek URL server atau koneksi internet</small></div>';
+    });
+}
+
+function showRelayDetail(kode) {
+  var area = document.getElementById('liveArea');
+  var url = getRelayUrl();
+  if (!url) {
+    area.innerHTML = '<div class="live-error">❌ Atur dulu URL server relay</div>';
+    return;
+  }
+  
+  area.innerHTML = '<div class="live-loading"><div class="spin"></div>Mengambil detail...</div>';
+  
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+  fetch(url + '?key=gp45relay&live=1&action=detail&kode=' + encodeURIComponent(kode), {
+    method: 'GET',
+    signal: controller.signal
+  })
+    .then(function(r) { clearTimeout(timeoutId); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d) {
+      clearTimeout(timeoutId);
+      if (d.error) throw new Error(d.error || 'Barang tidak ditemukan');
+      SearchHistory.save({k: d.kode || d.Kode, n: d.nama || d.Nama, h: d.harga_jual || d.HJual, b: d.barcode || d.BarcodeAktif || d.Barcode});
+      // Handle stocks from live API (format: {"GH":5,"GHA":2}) or QtyAkhir for main stock
+      var stk = d.stocks || d.stok_cabang || {};
+      var stokKeys = Object.keys(stk);
+      var stokTotal = Number(d.QtyAkhir || d.qty_akhir || 0);
+      for (var i = 0; i < stokKeys.length; i++) { var r = stk[stokKeys[i]]; stokTotal += (r && typeof r === 'object' ? (r.qty || r.stok || 0) : (r || 0)); }
+      
+      var stockClass = stokTotal > 0 ? 'avail' : 'empty';
+      var stockLabel = stokTotal > 0 ? '✅ Stok: ' + Number(stokTotal).toFixed(0) : '❌ Stok Habis';
+      
+      var nama = esc(d.nama || d.Nama || '');
+      var kod = esc(d.kode || d.Kode || kode);
+      var bc = esc(d.barcode || d.BarcodeAktif || d.Barcode || '-');
+      var price = Number(d.harga_jual || d.HJual || 0);
+      var hb = Number(d.harga_beli || d.HBeli || 0);
+      
+      // Info grid
+      var extras = '<div class="cell"><div class="lbl">Kode</div><div class="val">' + kod + '</div></div>';
+      extras += '<div class="cell"><div class="lbl">Barcode</div><div class="val">' + bc + '</div></div>';
+      extras += '<div class="cell"><div class="lbl">Satuan</div><div class="val">' + esc(d.satuan || d.Satuan || '-') + '</div></div>';
+      if (d.merek || d.Merek) extras += '<div class="cell"><div class="lbl">Merek</div><div class="val">' + esc(d.merek || d.Merek) + '</div></div>';
+      if (hb > 0) extras += '<div class="cell"><div class="lbl">Harga Beli</div><div class="val">Rp' + hb.toLocaleString('id-ID') + '</div></div>';
+      if (d.harga_jual2 > 0) extras += '<div class="cell"><div class="lbl">HJual 2</div><div class="val">Rp' + Number(d.harga_jual2).toLocaleString('id-ID') + '</div></div>';
+      if (d.harga_jual3 > 0) extras += '<div class="cell"><div class="lbl">HJual 3</div><div class="val">Rp' + Number(d.harga_jual3).toLocaleString('id-ID') + '</div></div>';
+      
+      // Branch stock
+      var bsHtml = '';
+      if (stokKeys.length > 0) {
+        bsHtml += '<div class="detail-title" style="margin-top:12px">📍 Stok Per Cabang</div>';
+        var sortedKeys = stokKeys.slice().sort();
+        for (var i = 0; i < sortedKeys.length; i++) {
+          var out = sortedKeys[i];
+          var raw = stk[out];
+          var qty = (raw && typeof raw === 'object' ? (raw.qty || raw.stok || 0) : (raw || 0));
+          bsHtml += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>' + esc(out) + '</span><span style="font-weight:700;color:' + (qty > 0 ? 'var(--green)' : 'var(--primary)') + '">' + Number(qty).toFixed(0) + '</span></div>';
+        }
+      } else {
+        bsHtml += '<div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;text-align:center;font-size:13px;color:var(--text2)">Tidak ada data stok cabang</div>';
+      }
+      
+      area.innerHTML =
+        '<div style="padding:12px 16px">' +
+        '<button class="back-btn" onclick="backToRelayResults()">← Kembali ke hasil</button>' +
+        '<div class="result-card show" style="margin:0">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + nama + '</div><button class="copy-np-btn" data-nama="' + escAttr(d.nama || d.Nama || '') + '" data-harga="' + price.toLocaleString('id-ID') + '" style="flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:8px;line-height:1" title="Salin nama + harga">📋</button></div>' +
+        // Big Price
+        '<div class="price-section">' +
+          '<div class="price-big"><span class="rp">Rp</span>' + price.toLocaleString('id-ID') + '</div>' +
+        '</div>' +
+        '<div class="stock-row ' + stockClass + '" style="margin:8px 0">' + stockLabel + '</div>' +
+        '<div class="detail-title">📋 Informasi Lengkap (RELAY)</div>' +
+        '<div class="info-grid">' + extras + '</div>' +
+        bsHtml + '</div></div>';
+    })
+    .catch(function(err) { clearTimeout(timeoutId);
+      area.innerHTML = '<div class="live-error">❌ Gagal: ' + esc(err.message) + '</div>';
+    });
+}
+
+function backToRelayResults() {
+  var q = document.getElementById('searchInput').value;
+  if (q && q.trim()) {
+    doRelaySearch(q.trim());
+  } else {
+    document.getElementById('liveArea').innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text2);font-size:14px"><span style="font-size:48px;display:block;margin-bottom:12px">📡</span>Cari barang via relay server<br><span style="font-size:12px">Akses dari mana saja!</span></div>';
+  }
+}
+// Close sync history overlay when tapping outside
+document.addEventListener('click', function(e) {
+  var overlay = document.getElementById('syncHistOverlay');
+  if (overlay && overlay.style.display === 'flex' && e.target === overlay) {
+    overlay.style.display = 'none';
+  }
+});
+// Copy nama + harga (from 📋 button)
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.copy-np-btn');
+  if (btn) {
+    var nama = btn.getAttribute('data-nama');
+    var harga = btn.getAttribute('data-harga');
+    copyText(nama + ' - Rp' + harga);
+    showToast('✅ Tersalin: ' + nama.substring(0, 30) + '... - Rp' + harga);
+  }
+});
+
+function copyText(str) {
+  if (!str) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str);
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = str;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+  } catch(e) {}
+}
+
+// Price click to copy
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('.price-big');
+  if (el) { copyText(el.textContent.trim().replace(/[^0-9,]/g,'')); }
+  var el2 = e.target.closest('.sku span:first-child, .sku span:last-child');
+  if (el2 && !e.target.closest('.live-tag')) { copyText(el2.textContent.trim()); }
+});
+
+// ── OMSET Setting Functions ──
+
+function loadOmsetBulan() {
+  var date=document.getElementById("omsetDate").value;
+  if(!date) date=new Date().toISOString().slice(0,10);
+  var area=document.getElementById("omsetBulanResult");
+  area.style.display="block";
+  document.getElementById("omsetResult").style.display="none";
+  // Tab toggle
+  document.getElementById("omsetTabBtn").classList.remove("active");
+  document.getElementById("omsetBulanBtn").classList.add("active");
+  area.innerHTML='<div style="text-align:center;padding:16px;color:var(--text2);font-size:15px">⏳ Mengambil omset bulan ini...</div>';
+  
+  var monthStart = date.slice(0,8)+"01";
+  
+  function fetchBulan(url){
+    var timedOut = false;
+    var tid = setTimeout(function(){ timedOut = true; }, 20000);
+    return fetch(url)
+      .then(function(r){ if(timedOut)throw new Error("Timeout"); clearTimeout(tid); return r.json(); })
+      .catch(function(err){
+        clearTimeout(tid);
+        if(timedOut) throw new Error("Server tidak merespon");
+        throw err;
+      });
+  }
+  
+  fetchBulan(gpApi("omset-bulan", "date="+date))
+    .then(function(data){
+      var area=document.getElementById("omsetBulanResult");
+      if(!data||!data.sales||!data.sales.length){
+        area.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:15px">\uD83d\udced Tidak ada data bulan ini</div>';
+        return;
+      }
+      var sales=data.sales||[];
+      var gr=data.grand_total||0;
+      var gt=data.total_trans||0;
+      
+      // Load lantai setting from localStorage
+      var settJson=localStorage.getItem("gp45_omset_v2");
+      var sett=settJson?JSON.parse(settJson):{l1_target:4285714,l2_target:3333333,l1_sales:["Brayen","Darren","Raydel","Pricilia","Franklyn","Genio"],l2_sales:["Mario","Johanes","Rivaldo","Moors"],inactive_sales:["Reagen","Yoshua"]};
+      if(!sett.l1_sales) sett.l1_sales=[];
+      if(!sett.l2_sales) sett.l2_sales=[];
+      if(!sett.inactive_sales) sett.inactive_sales=[];
+      
+      // Build lookup maps
+      var l1map={}, l2map={}, inactmap={};
+      for(var si=0;si<sett.l1_sales.length;si++) l1map[(sett.l1_sales[si]||"").toLowerCase()]=true;
+      for(var si=0;si<sett.l2_sales.length;si++) l2map[(sett.l2_sales[si]||"").toLowerCase()]=true;
+      for(var si=0;si<sett.inactive_sales.length;si++) inactmap[(sett.inactive_sales[si]||"").toLowerCase()]=true;
+      
+      // Divide sales by lantai
+      var l1_sales_list=[], l2_sales_list=[], unassigned=[];
+      var l1_total=0, l1_trans=0, l2_total=0, l2_trans=0, unk_total=0, unk_trans=0;
+      
+      for(var i=0;i<sales.length;i++){
+        var r=sales[i];
+        var nm=(r.sales||"").toLowerCase();
+        var j=Number(r.total||0);
+        if(j<=0) continue;
+        if(inactmap[nm]) continue;
+        
+        if(l1map[nm]){ l1_sales_list.push(r); l1_total+=j; l1_trans+=Number(r.trans||0); }
+        else if(l2map[nm]){ l2_sales_list.push(r); l2_total+=j; l2_trans+=Number(r.trans||0); }
+        else{ unassigned.push(r); unk_total+=j; unk_trans+=Number(r.trans||0); }
+      }
+      
+      var curDay = parseInt(date.slice(8,10));
+      var monthDays = 30;
+      var l1Count = l1_sales_list.length || 1;
+      var l2Count = l2_sales_list.length || 1;
+      // Target: (target harian * 26 hari kerja) per orang
+      var targetPerOrgL1 = Number(sett.l1_target||0)*26;
+      var targetPerOrgL2 = Number(sett.l2_target||0)*26;
+      var monthTargetTotal = (targetPerOrgL1 * l1Count) + (targetPerOrgL2 * l2Count);
+      var monthTargetL1 = targetPerOrgL1 * l1Count;
+      var monthTargetL2 = targetPerOrgL2 * l2Count;
+      
+      var h = '<div style="margin:8px 0 4px;font-size:16px;color:var(--text2);font-weight:700">📅 Bulan Ini: 1-'+date.slice(8,10)+" "+["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"][parseInt(date.slice(5,7))-1]+" "+date.slice(0,4)+'</div>';
+      
+      // Grand total bar
+      var monthPct = monthTargetTotal>0 ? ((gr/monthTargetTotal)*100).toFixed(1) : "0";
+      h += '<div class="omset-total"><span>💰 Grand Total Bulan Ini</span><span>'+gt+" trans \u2014 Rp"+Number(gr).toLocaleString("id-ID")+'</span></div>';
+      if(monthTargetTotal>0){
+        var color = parseFloat(monthPct)>=100 ? "#16a34a" : (parseFloat(monthPct)>=80 ? "#f59e0b" : "#dc2626");
+        h += '<div style="text-align:right;font-size:13px;color:var(--text2);margin-bottom:8px">'+monthPct+'% dari target Rp '+Number(monthTargetTotal).toLocaleString("id-ID")+'</div>';
+      }
+      
+      // Lantai 1 section
+      if(l1_sales_list.length){
+        h += '<div class="olantai-section"><div class="olantai-header l1">🔴 Lantai 1 \u2014 Target/org: Rp'+Number(targetPerOrgL1).toLocaleString("id-ID")+' <span>Rp'+Number(l1_total).toLocaleString("id-ID")+'</span></div>';
+        for(var i=0;i<l1_sales_list.length;i++){
+          var s=l1_sales_list[i];
+          var pct=targetPerOrgL1>0 ? ((s.total/targetPerOrgL1)*100).toFixed(1) : "0";
+          h += '<div class="olantai-row"><span class="olantai-name">▶ '+esc(s.sales)+'</span><span class="olantai-value">Rp'+Number(s.total).toLocaleString("id-ID")+'</span><span class="olantai-persen">'+pct+'%</span></div>';
+        }
+        h += '</div>';
+      }
+      
+      // Lantai 2 section
+      if(l2_sales_list.length){
+        h += '<div class="olantai-section"><div class="olantai-header l2">🟢 Lantai 2 \u2014 Target/org: Rp'+Number(targetPerOrgL2).toLocaleString("id-ID")+' <span>Rp'+Number(l2_total).toLocaleString("id-ID")+'</span></div>';
+        for(var i=0;i<l2_sales_list.length;i++){
+          var s=l2_sales_list[i];
+          var pct=targetPerOrgL2>0 ? ((s.total/targetPerOrgL2)*100).toFixed(1) : "0";
+          h += '<div class="olantai-row"><span class="olantai-name">▶ '+esc(s.sales)+'</span><span class="olantai-value">Rp'+Number(s.total).toLocaleString("id-ID")+'</span><span class="olantai-persen">'+pct+'%</span></div>';
+        }
+        h += '</div>';
+      }
+      
+      // Unassigned
+      if(unassigned.length){
+        h += '<div class="olantai-section"><div class="olantai-header" style="background:var(--bg);color:var(--text2)">❓ Belum diset <span>Rp'+Number(unk_total).toLocaleString("id-ID")+'</span></div>';
+        for(var i=0;i<unassigned.length;i++){
+          var s=unassigned[i];
+          h += '<div class="olantai-row"><span class="olantai-name">▶ '+esc(s.sales)+'</span><span class="olantai-value">Rp'+Number(s.total).toLocaleString("id-ID")+'</span><span class="olantai-persen">'+Number(s.trans)+' trans</span></div>';
+        }
+        h += '</div>';
+      }
+      
+      // Target info footer
+      h += '<div style="font-size:12px;color:var(--text2);text-align:center;padding:8px;border-top:1px solid var(--border);margin-top:8px">';
+      h += 'Target diatur via ⚙ Setting Lantai';
+      h += '</div>';
+      
+      area.innerHTML = h;
+    })
+    .catch(function(err){
+      var area=document.getElementById("omsetBulanResult");
+      area.innerHTML='<div style="text-align:center;color:var(--primary);font-size:15px">❌ '+esc(err.message||"Gagal mengambil data")+'</div>';
+    });
+}
+
+function loadOmsetSetting() {
+  var j=localStorage.getItem("gp45_omset_v2");
+  var s=j?JSON.parse(j):{l1_target:4285714,l2_target:3333333,l1_sales:[],l2_sales:[],inactive_sales:[]};
+  if(!s.l1_target) s.l1_target=4285714;
+  if(!s.l2_target) s.l2_target=3333333;
+  if(!s.l1_sales) s.l1_sales=[];
+  if(!s.l2_sales) s.l2_sales=[];
+  if(!s.inactive_sales) s.inactive_sales=[];
+  return s;
+}
+function saveOmsetSetting() {
+  var s=loadOmsetSetting();
+  var l1v=document.getElementById("osetL1Target").value.replace(/[^0-9]/g,"");
+  var l2v=document.getElementById("osetL2Target").value.replace(/[^0-9]/g,"");
+  if(l1v) s.l1_target=parseInt(l1v);
+  if(l2v) s.l2_target=parseInt(l2v);
+  localStorage.setItem("gp45_omset_v2",JSON.stringify(s));
+  closeOmsetSetting();
+  showToast("✅ Setting lantai tersimpan");
+}
+function showOmsetSetting() {
+  var s=loadOmsetSetting();
+  document.getElementById("osetL1Target").value=Number(s.l1_target).toLocaleString("id-ID");
+  document.getElementById("osetL2Target").value=Number(s.l2_target).toLocaleString("id-ID");
+  document.getElementById("omsetSettingOverlay").classList.add("show");
+  loadSalesSuggestion(s);
+}
+function closeOmsetSetting() {
+  document.getElementById("omsetSettingOverlay").classList.remove("show");
+}
+function loadSalesSuggestion(sett) {
+  var list=document.getElementById("osetSalesList");
+  list.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">⏳ Mengambil daftar sales...</div>';
+  fetch('http://192.168.6.200/grand.php?key=123&action=omset&date='+new Date().toISOString().slice(0,10))
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(!data||!data.sales){list.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">Tidak ada data sales</div>';return;}
+      var sales=data.sales||[];
+      var names=[];
+      for(var i=0;i<sales.length;i++){
+        var nm=sales[i].sales||"";
+        if(nm&&names.indexOf(nm)<0) names.push(nm);
+      }
+      names.sort();
+      if(names.length===0){list.innerHTML='<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">Tidak ada sales</div>';return;}
+      var h="";
+      for(var i=0;i<names.length;i++){
+        var nm=names[i];
+        var isL1=sett.l1_sales&&sett.l1_sales.indexOf(nm)>=0;
+        var isL2=sett.l2_sales&&sett.l2_sales.indexOf(nm)>=0;
+        var isIn=sett.inactive_sales&&sett.inactive_sales.indexOf(nm)>=0;
+        if(!isL1&&!isL2&&!isIn) isL1=true;
+        h+='<div class="oset-sale-item">'
+          +'<span class="oset-name">'+esc(nm)+'</span>'
+          +'<div class="oset-btn-group">'
+          +'<button class="oset-btn'+(isL1?' al1':'')+'" onclick="event.stopPropagation();setAssign(\''+escAttr(nm)+'\',1)">L1</button>'
+          +'<button class="oset-btn'+(isL2?' al2':'')+'" onclick="event.stopPropagation();setAssign(\''+escAttr(nm)+'\',2)">L2</button>'
+          +'<button class="oset-btn'+(isIn?' aina':'')+'" onclick="event.stopPropagation();setAssign(\''+escAttr(nm)+'\',0)">\u26d4</button>'
+          +'</div></div>';
+      }
+      list.innerHTML=h;
+    })
+    .catch(function(err){
+      list.innerHTML='<div style="text-align:center;color:var(--primary);font-size:13px">❌ Gagal load sales: '+esc(err.message||"")+'</div>';
+    });
+}
+function setAssign(name,lantai) {
+  var s=loadOmsetSetting();
+  if(!s.l1_sales) s.l1_sales=[];
+  if(!s.l2_sales) s.l2_sales=[];
+  if(!s.inactive_sales) s.inactive_sales=[];
+  var idx1=s.l1_sales.indexOf(name);if(idx1>=0)s.l1_sales.splice(idx1,1);
+  var idx2=s.l2_sales.indexOf(name);if(idx2>=0)s.l2_sales.splice(idx2,1);
+  var idxIn=s.inactive_sales.indexOf(name);if(idxIn>=0)s.inactive_sales.splice(idxIn,1);
+  if(lantai===1) s.l1_sales.push(name);
+  else if(lantai===2) s.l2_sales.push(name);
+  else s.inactive_sales.push(name);
+  localStorage.setItem("gp45_omset_v2",JSON.stringify(s));
+  loadSalesSuggestion(s);
+}
+function bulkAssign(lantai) {
+  var s=loadOmsetSetting();
+  var list=document.getElementById("osetSalesList");
+  var items=list.querySelectorAll(".oset-sale-item");
+  s.l1_sales=[]; s.l2_sales=[]; s.inactive_sales=[];
+  for(var i=0;i<items.length;i++){
+    var spans=items[i].querySelectorAll("span");
+    var nm=spans.length>0?spans[0].textContent.trim():"";
+    if(nm){
+      if(lantai===1) s.l1_sales.push(nm);
+      else if(lantai===2) s.l2_sales.push(nm);
+      else s.inactive_sales.push(nm);
+    }
+  }
+  localStorage.setItem("gp45_omset_v2",JSON.stringify(s));
+  loadSalesSuggestion(s);
+  showToast("✅ Bulk assign selesai");
+}
+
+// OMSET detail click delegation
+document.getElementById('omsetResult').addEventListener('click', function(e) {
+  var row = e.target.closest('.oset-click');
+  if (!row) return;
+  var sales = row.getAttribute('data-sales');
+  var date = row.getAttribute('data-date');
+  omsetDetail(sales, date, row);
+});
+</script>
+
+<!-- OMSET Setting Overlay -->
+<div class="oset-setting-overlay" id="omsetSettingOverlay">
+  <div class="oset-setting-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:16px;margin:0">⚙ Setting Lantai Sales</h3>
+      <button onclick="closeOmsetSetting()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--text2)">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin:0 0 8px">Target Omset per Lantai &amp; Assign Sales</p>
+    <div class="oset-target-row">
+      <input type="text" id="osetL1Target" placeholder="Target Lantai 1 (Rp)" inputmode="numeric">
+      <input type="text" id="osetL2Target" placeholder="Target Lantai 2 (Rp)" inputmode="numeric">
+    </div>
+    <div class="oset-bulk-btns">
+      <button class="oset-bulk-btn" onclick="bulkAssign(1)" style="background:var(--red-bg);color:var(--primary);border-color:var(--primary)">📌 All L1</button>
+      <button class="oset-bulk-btn" onclick="bulkAssign(2)" style="background:var(--green-bg);color:var(--green);border-color:var(--green)">📌 All L2</button>
+      <button class="oset-bulk-btn" onclick="bulkAssign(0)" style="background:var(--bg);color:var(--text2);border-color:var(--border)">⛔ All Nonaktif</button>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin:6px 0">Pilih lantai untuk setiap sales: <b style="color:var(--primary)">L1</b> | <b style="color:var(--green)">L2</b> | <span style="color:var(--text2)">Nonaktif</span></div>
+    <div id="osetSalesList" class="oset-sales-list"></div>
+    <button class="omset-btn" onclick="saveOmsetSetting()" style="margin-top:8px">💾 Simpan Setting</button>
+  </div>
+</div>
+
+<div style="position:fixed;bottom:0;left:0;right:0;pointer-events:none;z-index:9999;background:#000;display:flex;justify-content:space-between;align-items:center;padding:5px max(20px,env(safe-area-inset-left,20px)) max(5px,env(safe-area-inset-bottom,5px)) max(20px,env(safe-area-inset-right,20px))"><span style="color:#fff;font-size:9px;font-weight:600;opacity:.9">v1.0.0</span><span style="color:#fff;font-size:9px;font-weight:600;opacity:.9">moors pangalila</span></div>
+</body>
+</html>
+
