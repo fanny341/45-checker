@@ -68,8 +68,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 100);
 });
 
-// Also listen for overlays opening to refresh IP
-var origShow = document.getElementById ? null : null;
+
+// ════════════════════════════════════════
+// RELAY STUB (relay.js not loaded - this keeps branch stock from crashing)
+// ════════════════════════════════════════
+function getRelayUrl() {
+  var u = localStorage.getItem('gp45_relay_url');
+  if (!u) { u = ''; }
+  return u;
+}
 
 // ════════════════════════════════════════
 // PRICE CARD
@@ -803,7 +810,7 @@ function syncData() {
       };
     })
     .catch(function(err) {
-      if (err.name === 'AbortError') { closeSync(); return; }
+      if (err.name === 'AbortError') { document.getElementById('syncOverlay').classList.remove('show'); return; }
       showSyncError(err.message);
     });
 }
@@ -1292,147 +1299,37 @@ function cancelSync() {
     try { window._syncController.abort(); } catch(e) {}
     window._syncController = null;
   }
-  closeSync();
-}
-function closeSync() {
   document.getElementById('syncOverlay').classList.remove('show');
 }
-function checkNetwork(url) {
-  var netEl = document.getElementById("syncNetStatus");
-  var actionBtn = document.getElementById("syncActionBtn");
-  var ac = new AbortController();
-  setTimeout(function() { ac.abort(); }, 4000);
-  fetch(url.replace("/sync-json","") + "/api/offline", { method:"HEAD", signal:ac.signal })
-    .then(function(r) {
-      netEl.innerHTML = "✅ <b>Terhubung</b> ke server lokal";
-      netEl.style.color = "#16a34a";
-      if (actionBtn) { actionBtn.textContent = "🔍 Check Server Database"; actionBtn.disabled = false; }
-    })
-    .catch(function() {
-      netEl.innerHTML = "❌ <b>Tidak terhubung</b> ke jaringan lokal<br><span style='font-size:11px'>Pastikan HP terhubung ke WiFi lokal (192.168.6.x)</span>";
-      netEl.style.color = "#dc2626";
-      if (actionBtn) { actionBtn.textContent = "🔍 Coba Lagi"; actionBtn.disabled = false; }
-    });
 
-}
-function checkSyncServer() {
-  var syncUrl = gpApi('sync');
-  var btn = document.getElementById('syncActionBtn');
-  var srvSection = document.getElementById('syncServerSection');
-  var srvInfo = document.getElementById('syncServerInfo');
-  
-  btn.disabled = true;
-  btn.textContent = '⏳ Menghubungi server...';
-  srvSection.style.display = 'none';
-  
-  fetch(syncUrl)
-    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function(data) {
-      if (data && data.success && data.data) {
-        var total = data.total || data.data.length;
-        var sizeMB = (JSON.stringify(data.data).length / (1024*1024)).toFixed(1);
-        var elapsed = data.time || '?';
-        
-        srvSection.style.display = 'block';
-        srvInfo.innerHTML = 
-          '<div class="about-row"><span>Items</span><span>' + total.toLocaleString() + '</span></div>' +
-          '<div class="about-row"><span>Size</span><span>' + sizeMB + ' MB</span></div>' +
-          '<div class="about-row"><span>Waktu query</span><span>' + elapsed + ' detik</span></div>' +
-          '<div class="about-row"><span>Server</span><span>' + (data.server || '200') + '</span></div>';
-        
-        // Compare with local
-        var diff = total - allItems.length;
-        if (diff !== 0) {
-          srvInfo.innerHTML += '<div style="margin-top:8px;padding:8px;background:#fef3c7;border-radius:6px;font-size:12px;text-align:center;color:#92400e">⚠️ ' + 
-            (diff > 0 ? '+' : '') + diff.toLocaleString() + ' item berbeda dari lokal</div>';
-        } else {
-          srvInfo.innerHTML += '<div style="margin-top:8px;padding:8px;background:#d1fae5;border-radius:6px;font-size:12px;text-align:center;color:#065f46">✅ Data sudah terbaru</div>';
-        }
-        
-        btn.textContent = '📥 Download & Update (' + sizeMB + ' MB)';
-        btn.onclick = function() { doSync(syncUrl); };
-      } else {
-        throw new Error('Invalid response');
-      }
-    })
-    .catch(function(err) {
-      srvSection.style.display = 'block';
-      srvSection.style.background = '#fef2f2';
-      srvInfo.innerHTML = '❌ Gagal: ' + esc(err.message) + '<br><span style="font-size:11px;color:#6b7280">Pastikan server running di ' + esc(getServerIP()) + '</span>';
-      btn.textContent = '🔄 Coba Lagi';
-    })
-    .then(function() { btn.disabled = false; }, function() { btn.disabled = false; });
-}
 
-function doSync(syncUrl) {
-  var overlay = document.getElementById('syncOverlay');
-  overlay.innerHTML = '<div class="sync-panel">' +
-    '<div class="spinner"></div>' +
-    '<div class="sync-status-text">Downloading data...</div>' +
-    '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill sync-bar-fill" style="width:0%"></div></div>' +
-    '<div class="sync-progress-text">Memulai download...</div></div>';
-  
-  // Helper to update sync UI elements without conflicting IDs
-  function setSyncStatus(t) { var e = overlay.querySelector('.sync-status-text'); if(e) e.textContent = t; }
-  function setSyncBar(w) { var e = overlay.querySelector('.sync-bar-fill'); if(e) e.style.width = w; }
-  function setSyncProgress(t) { var e = overlay.querySelector('.sync-progress-text'); if(e) e.textContent = t; }
-  
-  fetch(syncUrl)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      setSyncBar('20%');
-      setSyncStatus('Menerima data...');
-      return r.json();
-    })
-    .then(function(data) {
-      if (!data || !data.success || !data.data) {
-        throw new Error(data && data.error ? data.error : 'Response invalid');
-      }
-      setSyncBar('50%');
-      setSyncStatus('Memproses ' + data.data.length.toLocaleString() + ' items...');
-      // Replace all items
-      allItems = data.data;
-      // Save to IndexedDB
-      setSyncProgress('Menyimpan ke database lokal...');
-      return saveToIndexedDB(allItems).then(function() {
-        setSyncBar('90%');
-        setSyncStatus('Menyimpan...');
-        return new Promise(function(r) { setTimeout(r, 300); });
-      }).then(function() {
-        // Save timestamp
-        localStorage.setItem('gp45_lu_v26', Date.now().toString());
-        
-        setSyncBar('100%');
-        setSyncStatus('✅ Selesai! ' + allItems.length.toLocaleString() + ' items diperbarui');
-        setSyncProgress('Memuat ulang aplikasi...');
-        
-        setTimeout(function() {
-          overlay.classList.remove('show');
-          showToast('✅ Sync selesai! ' + allItems.length.toLocaleString() + ' items');
-          resetSyncOverlay();
-          setTimeout(function() { window.location.reload(); }, 500);
-        }, 1000);
-      });
-    })
-    .catch(function(e) {
-      setSyncStatus('❌ Gagal: ' + e.message);
-      setSyncBar('0%');
-      setSyncProgress('');
-      setTimeout(function() {
-        overlay.classList.remove('show');
-        showToast('❌ Sync gagal');
-        resetSyncOverlay();
-      }, 2000);
-    });
-}
+
+
+
 
 function resetSyncOverlay() {
   var overlay = document.getElementById('syncOverlay');
-  overlay.innerHTML = '<div class="sync-panel">' +
-    '<div class="spinner"></div>' +
-    '<div class="sync-status-text">Starting...</div>' +
-    '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill sync-bar-fill" style="width:0%"></div></div>' +
-    '<div class="sync-progress-text">Downloading latest data from server</div></div>';
+  var ipRow = overlay.querySelector('.sync-panel > div:first-child');
+  if (ipRow && ipRow.querySelector('#syncServerIp')) {
+    // IP row exists - keep it, only reset loading section
+    var loadingSection = overlay.querySelector('#syncLoading');
+    if (loadingSection) {
+      loadingSection.innerHTML = 
+        '<div class="spinner"></div>' +
+        '<div id="syncTitle" style="font-size:16px;font-weight:700;margin:8px 0 4px">Sync Database</div>' +
+        '<div id="syncSub" style="font-size:12px;color:var(--text2)">Mendownload data terbaru...</div>' +
+        '<div id="syncStatus" style="font-size:12px;color:var(--text2);margin-top:8px;text-align:center">Siap sync</div>' +
+        '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill" id="syncBar" style="width:10%"></div></div>' +
+        '<div id="syncProgressText" style="font-size:11px;color:var(--text2);text-align:center">Downloading latest data from server</div>' +
+        '<button onclick="cancelSync()" id="syncCancelBtn" style="width:100%;padding:10px;margin-top:12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">✕ Batal</button>';
+    }
+  } else {
+    overlay.innerHTML = '<div class="sync-panel">' +
+      '<div class="spinner"></div>' +
+      '<div class="sync-status-text">Starting...</div>' +
+      '<div class="progress-bar" style="width:auto;margin:12px 20px"><div class="fill sync-bar-fill" style="width:0%"></div></div>' +
+      '<div class="sync-progress-text">Downloading latest data from server</div></div>';
+  }
 }
 function saveToIndexedDB(items) {
   return new Promise(function(resolve, reject) {
