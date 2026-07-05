@@ -41,7 +41,6 @@
   <div class="mode-bar">
     <button class="mode-btn active" id="modeLocalDB" onclick="setMode('localdb')">📋 OFFLINE</button>
     <button class="mode-btn" id="modeServer81" onclick="setMode('server81')">🌐 ONLINE</button>
-    <button class="mode-btn" id="modeRelay" onclick="setMode('relay')">📡 RELAY</button>
   </div>
 
   <!-- Live Bar (shown in detail mode) -->
@@ -56,7 +55,7 @@
     <span id="dataAge" style="font-size:10px;color:var(--text2);margin-left:auto;white-space:nowrap"></span>
   </div>
 
-  <!-- Connection Status (for ONLINE & RELAY modes) -->
+  <!-- Connection Status (for ONLINE mode) -->
   <div class="conn-bar" id="connBar" style="display:none">
     <span class="dot" id="connDot"></span>
     <span class="label" id="connLabel">⏳ Mengetes koneksi...</span>
@@ -109,7 +108,7 @@
         <div class="stat">Cek koneksi ke server 200</div>
         <div id="syncErrorMsg" style="font-size:12px;color:var(--primary);margin-top:6px"></div>
       </div>
-      <button id="syncRetryBtn" style="display:none;width:100%;padding:10px;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeSync()">✕ Tutup</button>
+      <button id="syncRetryBtn" style="display:none;width:100%;padding:10px;margin-top:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">🔄 Coba Lagi</button>
     </div>
   </div>
 
@@ -127,13 +126,6 @@
 
   <!-- Search -->
   <div class="search-section">
-    <div id="relayUrlRow" style="display:none!important;margin-bottom:8px">
-      <div style="display:flex;gap:6px">
-        <input type="url" id="relayUrlInput" value="" placeholder="https://gp45-relay.xmoritzu.workers.dev/" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">
-        <button onclick="saveRelayUrl()" style="padding:8px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Simpan</button>
-      </div>
-      <div id="relayStatus" style="display:none!important;font-size:11px;color:var(--text2);margin-top:4px;text-align:center"></div>
-    </div>
     <div class="search-wrap">
       <input type="text" id="searchInput" placeholder="Ketuk untuk mencari..." autocomplete="off">
       <button class="clear-btn" id="clearBtn" onclick="doClearSearch()">✕</button>
@@ -224,76 +216,13 @@
         <div class="about-row"><span>Aplikasi</span><span>GP45 DB</span></div>
         <div class="about-row"><span>Versi</span><span>1.1.0</span></div>
         <div class="about-row"><span>Database</span><span id="aboutDbCount">- item</span></div>
-        <div class="about-row"><span>Mode</span><span>OFFLINE · ONLINE · RELAY</span></div>
+        <div class="about-row"><span>Mode</span><span>OFFLINE · ONLINE</span></div>
         <div class="about-row"><span>Creator</span><span>moors pangalila</span></div>
       </div>
       <div class="about-section">
         <div class="about-section-title">📌 Riwayat Update</div>
         <div class="about-changelog">
-          <span style="font-weight:700;color:var(--primary)">v1.1.0</span> — Setting Server IP<br>      • Menu baru "Setting Server" — ganti alamat IP server tanpa edit kode<br>      • Semua fitur (sync, Price Card, Omset) sekarang pakai IP yang sama, bisa diganti kapan saja<br>      • Tombol test koneksi langsung di halaman setting<br>      <br>      <span style="font-weight:700;color:var(--primary)">v1.0.0</span> — GP45 DB Edition<br>
-      • Database 41.101 item + outlet stock 35.314 item (bawaan)<br>
-      • Semua fitur dari ULTIMATE Edition tetap dipertahankan<br>
-      <br>
-      <span style="font-weight:700;color:var(--primary)">v4.11.0</span> — 3-Source Branch Stock Card<br>
-      • 📦 Offline: data outlet stock tersimpan dari sync terakhir<br>
-      • 🌐 Server 200: fetch live + otomatis simpan offline<br>
-      • 📡 Relay: cadangan kalo server 200 gagal<br>
-      • Tiga sumber beda card, loading masing-masing<br>
-      <br>
-      <span style="font-weight:700;color:var(--primary)">v4.10.0</span> — Tap to Focus + Focus Ring<br>
-      • Tap di layar scanner buat trigger autofokus ulang<br>
-      • Animasi focus ring (lingkaran putih) muncul di titik tap<br>
-      • Fokus balik ke continuous setelah 1.5 detik<br>
-      • Default pakai continuous (tanpa near biar natural)<br>
-      <br>
-          <span style="font-weight:700;color:var(--primary)">v4.9.0</span> — Scanner Fix: FPS Turun, Res Naik, Focus Continuous<br>      • FPS 15 → 8 biar tiap frame lebih terang & kurang noise<br>      • Resolusi 640×480 → 1280×720 biar detail bar barcode lebih kebaca<br>      • Tambah focusMode continuous biar kamera auto fokus<br>      • Fix: barcode CODE-128 tipis & bengkok lebih gampang terdeteksi<br>      <br>
-          <span style="font-weight:700;color:var(--primary)">v4.8.0</span> — Scanner Cepat + Remove QR<br>      • FPS 5 → 15 biar scan lebih responsif dan cepat<br>      • Hapus QR_CODE (gak dipake di toko)<br>      • Hapus qrbox (cuma buat QR)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.1</span> — Torch Fix - native API<br>      • Torch sekarang pake native MediaStreamTrack API biar bisa nyala<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.7.0</span> — Orange Theme + Torch + Scanner Overlay<br>      • Ganti semua warna merah jadi orange (header, tombol, harga, dll)<br>      • Tombol Flashlight/Lampu di scanner (nyala/mati)<br>      • Scanner pindah ke overlay panel (gak ganggu halaman)<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.6.0</span> — 3-Button Lantai Setting + Scanner Beep<br>      • Setting lantai pake 3 tombol langsung (L1 | L2 | Nonaktif)<br>      • Scanner tambah beep & vibrate biar tau scan berhasil<br>      • Perbaiki layout omset percentage pake badge box<br>      <br>          <span style="font-weight:700;color:var(--primary)">v4.5.0</span> — Scanner Fix Lag + All Barcode Format<br>      • Camera FPS turun 5 biar ringan di HP<br>      • Resolusi kamera 640x480 biar gak lag<br>      • Barcode formats lengkap: CODE_128, CODE_39, EAN_13, EAN_8, UPC_A, UPC_E, QR<br>      • facingMode environment (tanpa exact) biar kompatibel semua device<br>      • Hapus torch & fallback yang bikin ribet<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.4.0</span>nel<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.2.0</span> — Fix Omset Detail Click Bug<br>      • Perbaiki bug klik detail sales hapus row lain<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.1.0</span> — Omset Code Cleanup<br>      • Hapus dead code renderOmset + tryJson<br>      • Bersihin duplicate render logic<br>      <br>      <span style="font-weight:700;color:var(--primary)">v4.0.0</span> — STABLE: Price Card fix + Detail Panel overlay + ULTIMATE badge<br>      • Price Card crash fix (findIndex + .finally compatibility)<br>      • Detail Price Card pake overlay panel sendiri<br>      • Badge ULTIMATE di icon original<br>      • Package: moorspangalila.ultimate.fresh (test)<br>      <br>      <span style="font-weight:700;color:var(--primary)">v3.2.0</span> — Search Icon + Harga Hero + Bersihin Code<br>
-          • 🔍 Search icon tetap di kiri, hapus emoji placeholder<br>
-          • Harga hero 52px bold 900, tanpa label Harga Jual/per item<br>
-          • Hapus SKU line di card (nama lebih gede)<br>
-          • Hapus tombol 📦 Offline hidden + dead code<br>
-          • Manual pindah ke setelah izin kamera<br>
-          • Fix: toast pas copy nama+harga
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v3.1.1</span> — Copy Nama+Harga + Cancel Sync<br>
-          • Tombol 📋 copy nama + harga (semua tab)<br>
-          • Tombol ✕ Batal pas sync (pake AbortController)<br>
-          • Dark mode: about, manual, stock.low, price-section, toast fix<br>
-          • Tombol sync proper styling (global .sync-btn)<br>
-          • Fix: resetSyncOverlay + saveToIndexedDB kehapus<br>
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v3.1.0</span> — Search History + Price Card<br>
-          • Price Card - Buat & kelola price card langsung dari HP<br>
-          • Riwayat pencarian otomatis<br>
-          • Search mode barcode & nama<br>
-          • Tema dark mode<br>
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v2.8</span> — Sync overlay panel + GP45 stock fix<br>
-          • Riwayat sync pindah ke panel overlay (bisa di-scroll)<br>
-          • Stok GP45 (Home & Living) muncul di semua tab<br>
-          • Stok per cabang lengkap + total semua<br>
-          • Info database + umur data di tab OFFLINE<br>
-          • Fix: `searchTimeoutId` error di fungsi lain<br>
-          • Fix: AbortSignal.timeout → AbortController (Android lama)<br>
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v2.7</span> — Detail sync + history<br>
-          • Detail item yg berubah (harga & stok) setelah sync<br>
-          • Riwayat sync tersimpan di localStorage<br>
-          • Badge umur database (🟢 🟡 🔴)<br>
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v2.6</span> — Database baru + RELAY detail<br>
-          • Database 41.162 item (Aktif saja) dari server 200<br>
-          • Big Price + Stok Cabang di tab RELAY<br>
-          • Fix: nested object stok_cabang (relay API)<br>
-          • Ukuran APK lebih ringan (1.6 MB)<br>
-          <br>
-          <span style="font-weight:700;color:var(--primary)">v2.5</span> — RELAY tab + sync<br>
-          • Tab RELAY — akses dari luar via Cloudflare Worker<br>
-          • Sync langsung ke server 200 (tanpa Flask)<br>
-          • Big Price + Info Grid + Stok Cabang di semua tab<br>
-          • Detail perbandingan data pas sync<br>
-          • Scanner barcode di header<br>
-          • Debug log + manual built-in
+          <span style="font-weight:700;color:var(--primary)">v1.1.0</span> — Setting Server IP<br>      • Menu baru "Setting Server" — ganti alamat IP server tanpa edit kode<br>      • Simplified UI: Hanya OFFLINE & ONLINE mode<br>      • Database 41.101 item + outlet stock 35.314 item (bawaan)<br>      • Semua fitur dari ULTIMATE Edition tetap dipertahankan<br>      <br>
         </div>
       </div>
       <div class="about-section">
@@ -319,8 +248,8 @@
     <div class="about-body">
       <div class="about-section">
         <div class="about-section-title">🌐 Alamat Server (IP)</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Dipakai untuk sinkronisasi database, Price Card, dan Omset. Isi IP komputer/server toko di jaringan WiFi ini (contoh: 192.168.6.200).</div>
-        <input type="text" id="settingsServerIp" placeholder="192.168.6.200" autocomplete="off" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);box-sizing:border-box;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Dipakai untuk sinkronisasi database, Price Card, dan Omset. Isi IP komputer/server toko di jaringan WiFi lokal.</div>
+        <input type="text" id="settingsServerIp" placeholder="192.168.6.200" autocomplete="off" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);box-sizing:border-box">
         <div id="settingsSaveHint" style="font-size:11px;color:var(--text2);margin-bottom:12px;min-height:14px"></div>
         <button class="about-close-btn" style="background:var(--accent);color:#fff;margin-bottom:8px" onclick="applySettingsServerIp()">💾 Simpan &amp; Test Koneksi</button>
       </div>
@@ -339,7 +268,7 @@
     <div class="manual-header">
       <div style="font-size:32px;margin-bottom:4px">📖</div>
       <div style="font-size:18px;font-weight:800">PANDUAN CEPAT</div>
-      <div style="font-size:11px;opacity:.7">GP45 DB v4.7.1 - Orange Theme + Torch Fix + Scanner Overlay</div>
+      <div style="font-size:11px;opacity:.7">GP45 DB v1.1.0 - Simplified UI</div>
     </div>
     <div class="manual-body">
       <div class="manual-section">
@@ -351,8 +280,8 @@
         <div class="manual-text">Tap ikon <b>📷</b> di pojok kiri header. Arahkan ke barcode. Hasil langsung tampil.</div>
       </div>
       <div class="manual-section">
-        <div class="manual-stitle">📋 OFFLINE · 🌐 ONLINE · 📡 RELAY</div>
-        <div class="manual-text"><b>OFFLINE</b> = data lokal HP. Cepet, gak pakai internet. <b>ONLINE</b> = langsung ke server 200 (butuh WiFi toko). <b>RELAY</b> = via Cloudflare, bisa dari luar toko.</div>
+        <div class="manual-stitle">📋 OFFLINE · 🌐 ONLINE</div>
+        <div class="manual-text"><b>OFFLINE</b> = data lokal HP. Cepet, gak pakai internet. <b>ONLINE</b> = langsung ke server 200 (butuh WiFi toko).</div>
       </div>
       <div class="manual-section">
         <div class="manual-stitle">📋 SALIN NAMA + HARGA</div>
@@ -411,4 +340,3 @@
 <script src="pricecard.js"></script>
 <script src="server81.js"></script>
 <script src="scanner.js"></script>
-<script src="relay.js"></script>

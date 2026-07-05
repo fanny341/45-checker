@@ -325,10 +325,8 @@ function loadChunk(idx) {
 
 function setMode(mode) {
   currentMode = mode;
-  // document.getElementById('modeOffline').className = 'mode-btn' + (mode === 'offline' ? ' active' : ''); // removed
   document.getElementById('modeLocalDB').className = 'mode-btn' + (mode === 'localdb' ? ' active' : '');
   document.getElementById('modeServer81').className = 'mode-btn' + (mode === 'server81' ? ' active' : '');
-  document.getElementById('modeRelay').className = 'mode-btn' + (mode === 'relay' ? ' active' : '');
   
   // Hide all mode-specific bars
   document.getElementById('syncInfo').classList.remove('show');
@@ -338,7 +336,6 @@ function setMode(mode) {
   document.getElementById('liveBarLocalDB').style.display = 'none';
   document.getElementById('liveArea').style.display = 'none';
   document.getElementById('resultCard').classList.remove('show');
-  document.getElementById('relayUrlRow').style.display = 'none';
   document.getElementById('suggestions').classList.remove('show');
   document.getElementById('searchInput').value = '';
   document.getElementById('clearBtn').classList.remove('show');
@@ -363,22 +360,6 @@ function setMode(mode) {
     clearInterval(pingInterval);
     pingServer200();
     pingInterval = setInterval(pingServer200, 5000);
-  } else if (mode === 'relay') {
-    document.getElementById('statusBar').style.display = 'flex';
-    document.getElementById('searchInput').placeholder = 'Cari via relay server...';
-    document.getElementById('liveArea').style.display = 'block';
-    document.getElementById('relayUrlRow').style.display = 'block';
-    document.getElementById('connBar').style.display = 'flex';
-    clearInterval(pingInterval);
-    pingRelay();
-    pingInterval = setInterval(pingRelay, 10000);
-    var savedUrl = localStorage.getItem('gp45_relay_url') || '';
-    if (!savedUrl) {
-      savedUrl = 'https://gp45-relay.xmoritzu.workers.dev/';
-      localStorage.setItem('gp45_relay_url', savedUrl);
-    }
-    document.getElementById('relayUrlInput').value = savedUrl;
-    document.getElementById('relayStatus').textContent = '📡 ' + savedUrl;
   }
 }
 
@@ -509,7 +490,7 @@ function showResult(item) {
   // Unified card: Big Price + Info Grid + Branch Stock
   var modeLabel = isLocalDB ? 'OFFLINE' : (currentMode === 'server81' ? 'ONLINE' : 'OFFLINE');
   card.innerHTML = 
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + esc(item.n) + '</div><button class="copy-np-btn" data-nama="' + escAttr(item.n) + '" data-harga="' + Number(item.h || 0).toLocaleString('id-ID') + '" style="flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;padding:4px;border-radius:8px;line-height:1" title="Salin nama + harga">📋</button></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div class="name" style="flex:1">' + esc(item.n) + '</div><button class="copy-np-btn" data-nama="' + escAttr(item.n) + '" data-harga="' + escAttr(Number(item.h || 0).toLocaleString('id-ID')) + '" onclick="copyNamePrice(this)" style="background:none;border:none;font-size:20px;padding:4px 8px;cursor:pointer;color:var(--primary)">📋</button></div>' +
     // Big Price
     '<div class="price-section">' +
       '<div class="price-big"><span class="rp">Rp</span>' + Number(item.h || 0).toLocaleString('id-ID') + '</div>' +
@@ -531,7 +512,7 @@ function showResult(item) {
     if (hb) hb.style.display = 'none';
   }
   
-  // Branch stock: 3 sources (offline, server 200, relay)
+  // Branch stock: 2 sources (offline, server 200)
   var q = item.k || item.b;
   showBranchStock('offlineBranchStock', item, q);
 }
@@ -614,10 +595,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
     return;
   }
   
-  if (currentMode === 'relay') {
-    // RELAY: search via custom URL
-    liveTimeout = setTimeout(function() { doRelaySearch(val); }, 300);
-  } else if (currentMode === 'server81') {
+  if (currentMode === 'server81') {
     // ONLINE: live search from server with progressive fallback
     liveTimeout = setTimeout(function() { doServer81SearchProgressive(val); }, 300);
   } else {
