@@ -33,6 +33,7 @@ if ! command -v zipalign &>/dev/null; then
 fi
 
 mkdir -p "$OUTPUT_DIR" "$PROJECT_DIR/template"
+mkdir -p "$PROJECT_DIR/keystore"
 
 if [ ! -f "$KEYSTORE" ]; then
     echo "=== Generating keystore ==="
