@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Scan Barcode" android:textSize="18sp" android:textStyle="bold" />
+    <TextView android:id="@+id/tvStatus" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="Tekan tombol untuk scan"
+        android:layout_marginBottom="8dp" />
+    <Button android:id="@+id/btnTorch" android:layout_width="wrap_content"
+        android:layout_height="40dp" android:text="🔦 Torch" android:layout_marginBottom="8dp" />
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:visibility="gone" />
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/resultCard" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="8dp"
+        android:visibility="gone" app:cardCornerRadius="12dp"
+        android:clickable="true" android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+        <LinearLayout android:orientation="vertical" android:padding="12dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@+id/tvResultNama" android:textSize="16sp" android:textStyle="bold" />
+            <TextView android:id="@+id/tvResultHarga" android:textSize="20sp" android:textColor="#E53935" />
+            <TextView android:id="@+id/tvResultStok" android:textSize="13sp" />
+            <TextView android:id="@+id/tvResultKode" android:textSize="12sp" android:textColor="#888" />
+            <Button android:id="@+id/btnCloseResult" android:layout_width="match_parent"
+                android:layout_height="36dp" android:text="✕ Tutup"
+                style="?attr/materialButtonOutlinedStyle" android:layout_marginTop="8dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

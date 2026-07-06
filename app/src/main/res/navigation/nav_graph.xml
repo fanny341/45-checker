@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.gp45x.stockcheck.ui.home.HomeFragment"
+        android:label="Home" />
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.gp45x.stockcheck.ui.scanner.ScannerFragment"
+        android:label="Scan" />
+    <fragment
+        android:id="@+id/omsetFragment"
+        android:name="com.gp45x.stockcheck.ui.omset.OmsetFragment"
+        android:label="Omset" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.gp45x.stockcheck.ui.settings.SettingsFragment"
+        android:label="Settings" />
+</navigation>

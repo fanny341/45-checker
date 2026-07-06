@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:padding="12dp">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView android:textSize="18sp" android:textStyle="bold" android:text="Pengaturan" />
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardCornerRadius="12dp">
+            <LinearLayout android:orientation="vertical" android:padding="12dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Server 200" android:textSize="14sp" android:textStyle="bold" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox" android:hint="IP Server">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etServerIp" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+                <Button android:id="@+id/btnSaveIp" android:layout_width="match_parent"
+                    android:layout_height="40dp" android:text="Simpan IP" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="12dp">
+            <LinearLayout android:orientation="vertical" android:padding="12dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Database" android:textSize="14sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvDbCount" android:textSize="13sp" android:layout_marginTop="4dp" />
+                <Button android:id="@+id/btnSync" android:layout_width="match_parent"
+                    android:layout_height="40dp" android:text="🔄 Sync Data" android:layout_marginTop="8dp" />
+                <ProgressBar android:id="@+id/progressBar" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:visibility="gone" android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp" app:cardCornerRadius="12dp">
+            <LinearLayout android:orientation="vertical" android:padding="12dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="WebVersion" android:textSize="14sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnWebVersion" android:layout_width="match_parent"
+                    android:layout_height="40dp" android:text="🌐 Buka WebVersion" android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView android:id="@+id/tvStatus" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>
