@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
             val files = listOf("data_0.json", "data_1.json", "data_2.json", "data_3.json", "data_4.json")
             var total = 0
             for (file in files) {
-                val inputStream = assets.open(file)
+                val inputStream = this@MainActivity.assets.open(file)
                 val reader = BufferedReader(InputStreamReader(inputStream))
                 val json = reader.readText()
                 reader.close()
@@ -62,26 +62,26 @@ class MainActivity : AppCompatActivity() {
                 
                 val items = rawItems.map { raw ->
                     Item(
-                        kode = (raw["k"] as? String) ?: "",
-                        nama = (raw["n"] as? String) ?: "",
-                        barcode = (raw["b"] as? String) ?: "",
-                        satuan = (raw["s"] as? String) ?: "",
-                        merek = (raw["m"] as? String) ?: "",
-                        hargaJual = (raw["h"] as? Number)?.toLong() ?: 0,
-                        hargaBeli = (raw["hb"] as? Number)?.toLong() ?: 0,
-                        stokGp45 = (raw["q"] as? Number)?.toInt() ?: 0,
-                        stokGp = (raw["q_gp"] as? Number)?.toInt() ?: 0,
-                        stokMct = (raw["q_mct"] as? Number)?.toInt() ?: 0,
-                        stokGh = (raw["q_gh"] as? Number)?.toInt() ?: 0,
-                        stokGhm = (raw["q_ghm"] as? Number)?.toInt() ?: 0,
-                        stokGha = (raw["q_gha"] as? Number)?.toInt() ?: 0,
-                        stokGhb = (raw["q_ghb"] as? Number)?.toInt() ?: 0,
-                        stokHo = (raw["q_ho"] as? Number)?.toInt() ?: 0,
-                        hargaHk = (raw["hk"] as? Number)?.toLong() ?: 0,
-                        hkNumber = (raw["hk_nama"] as? String) ?: "",
-                        hkExpire = (raw["hk_expiry"] as? String) ?: "",
-                        hargaH2 = (raw["h2"] as? Number)?.toLong() ?: 0,
-                        hargaH3 = (raw["h3"] as? Number)?.toLong() ?: 0,
+                        kode = (raw["Kode"] as? String) ?: "",
+                        nama = (raw["Nama"] as? String) ?: "",
+                        barcode = (raw["Barcode"] as? String) ?: "",
+                        satuan = (raw["Satuan"] as? String) ?: "",
+                        merek = (raw["Merek"] as? String) ?: "",
+                        hargaJual = (raw["HJual"] as? Number)?.toLong() ?: 0,
+                        hargaBeli = (raw["HBeli"] as? Number)?.toLong() ?: 0,
+                        stokGp45 = (raw["Stok"] as? Number)?.toInt() ?: 0,
+                        stokGp = 0,
+                        stokMct = 0,
+                        stokGh = 0,
+                        stokGhm = 0,
+                        stokGha = 0,
+                        stokGhb = 0,
+                        stokHo = 0,
+                        hargaHk = (raw["HK"] as? Number)?.toLong() ?: 0,
+                        hkNumber = (raw["HK_Nama"] as? String) ?: "",
+                        hkExpire = (raw["HK_Expiry"] as? String) ?: "",
+                        hargaH2 = (raw["HJual2"] as? Number)?.toLong() ?: 0,
+                        hargaH3 = (raw["HJual3"] as? Number)?.toLong() ?: 0,
                         updatedAt = ""
                     )
                 }

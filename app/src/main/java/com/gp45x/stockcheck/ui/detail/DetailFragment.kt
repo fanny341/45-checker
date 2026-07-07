@@ -51,14 +51,14 @@ class DetailFragment : Fragment() {
         binding.tvHargaBeli.text = "Harga Beli: ${formatRupiah(item.hargaBeli)}"
 
         binding.tvGp45.text = "${item.stokGp45}"
-        binding.tvGp.text = "${item.stokGp}"
-        binding.tvMct.text = "${item.stokMct}"
-        binding.tvGh.text = "${item.stokGh}"
-        binding.tvGhm.text = "${item.stokGhm}"
-        binding.tvGha.text = "${item.stokGha}"
-        binding.tvGhb.text = "${item.stokGhb}"
-        binding.tvHo.text = "${item.stokHo}"
-        binding.tvTotal.text = "${item.totalStok}"
+        binding.tvGp.text = "0"
+        binding.tvMct.text = "0"
+        binding.tvGh.text = "0"
+        binding.tvGhm.text = "0"
+        binding.tvGha.text = "0"
+        binding.tvGhb.text = "0"
+        binding.tvHo.text = "0"
+        binding.tvTotal.text = "${item.stokGp45}"
 
         // HK info
         if (item.hargaHk > 0 && item.hkNumber.isNotBlank()) {

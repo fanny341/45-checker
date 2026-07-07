@@ -31,12 +31,7 @@ class ItemAdapter(private val onClick: (Item) -> Unit) : ListAdapter<Item, ItemA
             binding.tvHarga.text = formatRupiah(item.hargaJual)
             binding.tvStok.text = "Stok: ${item.totalStok} ${item.satuan}"
 
-            val outletInfo = buildString {
-                append("GP45:${item.stokGp45} GP:${item.stokGp} GH:${item.stokGh}")
-                append(" GHM:${item.stokGhm} GHA:${item.stokGha} GHB:${item.stokGhb}")
-                append(" HO:${item.stokHo}")
-            }
-            binding.tvOutlet.text = outletInfo
+            binding.tvOutlet.text = "Stok: ${item.stokGp45} ${item.satuan} • ${item.merek}
 
             binding.root.setOnClickListener { onClick(item) }
         }
