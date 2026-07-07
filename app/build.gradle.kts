@@ -9,7 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.gp45x.stockcheck"
+        applicationId = "com.gp45x.stockcheck.nativev1"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
