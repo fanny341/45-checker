@@ -12,6 +12,8 @@ import com.gp45x.stockcheck.data.model.Item
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -44,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun loadItemsFromAssets() {
+    private suspend fun loadItemsFromAssets() = withContext(Dispatchers.IO) {
         try {
             val db = AppDatabase.getInstance(this)
             val files = listOf("data_0.json", "data_1.json", "data_2.json", "data_3.json", "data_4.json")

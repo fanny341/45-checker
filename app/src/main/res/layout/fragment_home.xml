@@ -3,13 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="6dp">
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/Widget.Material3.TextInputLayout.FilledBox"
-        android:hint="Cari barang...">
+        android:hint="Cari barang..."
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="0dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/searchInput"
@@ -24,6 +26,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="32dp"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
         android:text="Ketik minimal 2 huruf"
         android:visibility="gone" />
 
