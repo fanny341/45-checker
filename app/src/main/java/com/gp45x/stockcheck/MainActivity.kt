@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private suspend fun loadItemsFromAssets() = withContext(Dispatchers.IO) {
         try {
-            val db = AppDatabase.getInstance(this)
+            val db = AppDatabase.getInstance(this@MainActivity)
             val files = listOf("data_0.json", "data_1.json", "data_2.json", "data_3.json", "data_4.json")
             var total = 0
             for (file in files) {
