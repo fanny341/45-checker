@@ -187,9 +187,8 @@ class MainActivity : AppCompatActivity() {
                         }
                         previewView?.visibility = android.view.View.VISIBLE
 
-                        val preview = Preview.Builder().build().also {
-                            it.surfaceProvider = previewView?.surfaceProvider
-                        }
+                        val preview = Preview.Builder().build()
+                        preview.setSurfaceProvider(previewView?.surfaceProvider)
 
                         val barcodeOptions = com.google.mlkit.vision.barcode.BarcodeScannerOptions.Builder()
                             .setBarcodeFormats(
