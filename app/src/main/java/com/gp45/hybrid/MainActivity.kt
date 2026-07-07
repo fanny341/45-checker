@@ -22,6 +22,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.gson.Gson
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val mainScope = CoroutineScope(Dispatchers.Main)
+    private lateinit var scannerBridge: ScannerBridge
 
     // ========== BRIDGE: Utils ==========
 
@@ -147,14 +149,9 @@ class MainActivity : AppCompatActivity() {
             startCameraScan()
         }
 
-        override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-            if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startCameraScan()
-            }
-        }
 
-        private fun startCameraScan() {
+
+        fun startCameraScan() {
             if (isScanning) return
             isScanning = true
 
@@ -172,9 +169,18 @@ class MainActivity : AppCompatActivity() {
                     cameraProvider?.unbindAll()
 
                     val preview = Preview.Builder().build()
-                    preview.surfaceProvider = previewView!!.surfaceProvider
+                    preview.setSurfaceProvider(previewView!!.surfaceProvider)
 
-                    val barcodeScanner = BarcodeScanning.getClient()
+                    val barcodeOptions = com.google.mlkit.vision.barcode.BarcodeScannerOptions.Builder()
+                        .setBarcodeFormats(
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_128,
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_39,
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE
+                        ).build()
+                    val barcodeScanner = BarcodeScanning.getClient(barcodeOptions)
 
                     val imageAnalysis = ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -259,9 +265,19 @@ class MainActivity : AppCompatActivity() {
         // Register bridges
         webView.addJavascriptInterface(UtilsBridge(), "AndroidUtils")
         webView.addJavascriptInterface(DatabaseBridge(), "AndroidDB")
-        webView.addJavascriptInterface(ScannerBridge(), "AndroidScanner")
+        scannerBridge = ScannerBridge()
+        webView.addJavascriptInterface(scannerBridge, "AndroidScanner")
 
         webView.loadUrl("file:///android_asset/index.html")
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (::scannerBridge.isInitialized) {
+                scannerBridge.startCameraScan()
+            }
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
