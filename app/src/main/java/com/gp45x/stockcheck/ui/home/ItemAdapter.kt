@@ -31,7 +31,7 @@ class ItemAdapter(private val onClick: (Item) -> Unit) : ListAdapter<Item, ItemA
             binding.tvHarga.text = formatRupiah(item.hargaJual)
             binding.tvStok.text = "Stok: ${item.totalStok} ${item.satuan}"
 
-            binding.tvOutlet.text = "Stok: ${item.stokGp45} ${item.satuan} • ${item.merek}
+            binding.tvOutlet.text = "Stok: ${item.stokGp45} ${item.satuan} • ${item.merek}"
 
             binding.root.setOnClickListener { onClick(item) }
         }
