@@ -23,20 +23,11 @@ jobs:
       - name: Generate Wrapper & Build
         run: |
           gradle wrapper --gradle-version=8.7
-          ./gradlew assembleRelease
+          ./gradlew assembleDebug
       
-      - name: Sign APK
+      - name: Sign APK (debug)
         run: |
-          keytool -genkey -v -keystore debug.keystore -alias gp45 \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
-            -dname "CN=GP45, OU=GP45, O=GP45, L=Jakarta, ST=Indonesia, C=ID"
-          BUILD_TOOLS=$(ls -1 $ANDROID_SDK_ROOT/build-tools/ | sort -V | tail -1)
-          export PATH="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS:$PATH"
-          cp app/build/outputs/apk/release/app-release-unsigned.apk app-unsigned.apk
-          zipalign -f 4 app-unsigned.apk app-aligned.apk
-          apksigner sign --ks debug.keystore --ks-pass pass:android \
-            --ks-key-alias gp45 --out GP45_Hybrid_v1.0.apk app-aligned.apk
+          cp app/build/outputs/apk/debug/app-debug.apk GP45_Hybrid_v1.0.apk
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
