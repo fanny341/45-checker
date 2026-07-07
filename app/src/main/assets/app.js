@@ -182,6 +182,34 @@ function loadData()
   var loadingSection = document.getElementById('loadingSection');
   var failedChunks = [];
   
+  // Use native AndroidDB bridge if available (faster)
+  if (window.AndroidDB) {
+    var result = AndroidDB.loadDatabase();
+    if (result === 'OK') {
+      var itemCount = AndroidDB.getItemCount();
+      status.textContent = itemCount.toLocaleString() + " items [offline]";
+      count.textContent = '[items] ' + itemCount.toLocaleString();
+      if (itemCount > 0) {
+        loadingSection.style.display = "none";
+        input.disabled = false;
+        input.focus();
+        // Use allItems for compatibility with rest of code
+        allItems = [{_native: true, count: itemCount}];
+        if (!localStorage.getItem("gp45_lu_v26")) {
+          localStorage.setItem("gp45_lu_v26", Date.now().toString());
+        }
+        loadBundledOutletStock();
+        updateLastUpdateDisplay();
+        renderDbInfo();
+        SearchHistory.render();
+        isLoading = false;
+        setMode('localdb');
+        return;
+      }
+      // Fall through to JS loading if item count is 0
+    }
+  }
+  
   function loadNext(i) { 
     if (i >= totalChunks) {
       progress.style.width = '100%';
@@ -370,6 +398,16 @@ function precisionFilter(items, query, mode) {
 function searchItems(query) {
   if (!query || query.trim().length < 1) return [];
   query = query.trim().toLowerCase();
+  
+  // Use AndroidDB native search if available
+  if (window.AndroidDB && window.AndroidDB.search) {
+    try {
+      return JSON.parse(AndroidDB.search(query));
+    } catch(e) {
+      // fall through to JS search on error
+    }
+  }
+  
   var keywords = query.split(/[\s,]+/).filter(function(kw) { return kw.length > 0; });
   if (keywords.length === 0) return [];
 
@@ -637,6 +675,18 @@ document.getElementById('searchInput').addEventListener('keydown', function(e) {
 });
 
 // ════════════════════════════════════════
+// VIBRATE HELPER
+// ════════════════════════════════════════
+function doVibrate(ms) {
+  // Use native vibrate via AndroidUtils if available
+  if (window.AndroidUtils) {
+    AndroidUtils.vibrate(ms);
+  } else {
+    try { navigator.vibrate(ms); } catch(e) {}
+  }
+}
+
+// ════════════════════════════════════════
 // TOAST
 // ════════════════════════════════════════
 
@@ -656,6 +706,11 @@ function showToast(msg) {
 function copyText(str) {
   if (!str) return;
   try {
+    // Use native clipboard via AndroidUtils bridge if available
+    if (window.AndroidUtils) {
+      AndroidUtils.copyToClipboard(str);
+      return;
+    }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(str);
     } else {

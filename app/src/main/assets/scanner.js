@@ -1,4 +1,4 @@
-// GP45 - scanner.js (v2 - simple camera switch)
+// GP45 - scanner.js (v2 - simple camera switch + native bridge)
 
 var _cameraIds = [];
 var _camIdx = 0;
@@ -6,6 +6,20 @@ var _camIdx = 0;
 function toggleScanner() {
   if (scannerActive) { stopScanner(); return; }
   document.getElementById('scannerContainer').classList.add('show');
+  
+  // Use native scanner if available (AndroidScanner bridge)
+  if (window.AndroidScanner) {
+    var el = document.getElementById('scannerElement');
+    if (el) {
+      el.style.display = 'none';
+      el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;background:var(--bg2)"><div style="font-size:48px;margin-bottom:12px">📷</div><div style="font-size:16px;font-weight:700;color:var(--text)">Native Scanner Active</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Arahkan ke barcode...</div></div>';
+    }
+    scannerActive = true;
+    AndroidScanner.startScan('onNativeScanResult');
+    if (!localStorage.getItem("gp45_first_launch")) showManual();
+    return;
+  }
+  
   setTimeout(function() { startScanner(); }, 300);
 }
 
@@ -80,7 +94,31 @@ function startScanner() {
   } catch(e) { scannerActive = false; }
 }
 
+// Native scanner result callback
+function onNativeScanResult(code) {
+  if (!code || code === '') return;
+  playBeep();
+  if (window.AndroidUtils) AndroidUtils.vibrate(100);
+  else try { navigator.vibrate(100); } catch(e) {}
+  stopScanner();
+  document.getElementById('searchInput').value = code;
+  document.getElementById('clearBtn').classList.add('show');
+  if (currentMode === 'server81') {
+    doServer81SearchProgressive(code);
+    setTimeout(function() {
+      var r = window._lastResults;
+      if (r && r.length > 0) selectItem(0);
+      else showToast('Barcode tidak ditemukan di server');
+    }, 500);
+  } else {
+    var results = searchItems(code);
+    if (results.length > 0) { showSuggestions(results); selectItem(0); }
+    else { showToast('Barcode tidak ditemukan'); }
+  }
+}
+
 function enumerateCameras() {
+  if (window.AndroidScanner) return; // Native scanner handles camera selection
   navigator.mediaDevices.enumerateDevices().then(function(devices) {
     var cams = devices.filter(function(d) { return d.kind === 'videoinput'; });
     // Filter out front cameras
@@ -100,6 +138,7 @@ function enumerateCameras() {
 }
 
 function updateCamLabel() {
+  if (window.AndroidScanner) return; // Native scanner handles camera selection
   var label = document.getElementById('camLabel');
   if (!label) return;
   if (_cameraIds.length > 0) {
@@ -136,10 +175,16 @@ function toggleTorch() {
 
 function stopScanner() {
   scannerActive = false;
+  if (window.AndroidScanner) {
+    try { AndroidScanner.stopScan(); } catch(e) {}
+  }
   if (torchOn) { torchOn = false;
     try { var v = document.querySelector('#scannerElement video'); if(v&&v.srcObject){var t=v.srcObject.getVideoTracks()[0];if(t)t.applyConstraints({advanced:[{torch:false}]});} } catch(e){} }
   if (html5QrCode) { try { html5QrCode.stop(); } catch(e) {} try { html5QrCode.clear(); } catch(e) {} }
   document.getElementById('scannerContainer').classList.remove('show');
+  // Restore scanner element display
+  var el = document.getElementById('scannerElement');
+  if (el) el.style.display = 'block';
 }
 
 function playBeep() {
@@ -160,7 +205,8 @@ function playBeep() {
 
 function onScanSuccess(decodedText) {
   playBeep();
-  try { navigator.vibrate(100); } catch(e) {}
+  if (window.AndroidUtils) AndroidUtils.vibrate(100);
+  else try { navigator.vibrate(100); } catch(e) {}
   stopScanner();
   document.getElementById('searchInput').value = decodedText;
   document.getElementById('clearBtn').classList.add('show');

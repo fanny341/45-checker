@@ -9,10 +9,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -22,7 +24,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.google.gson.Gson
@@ -30,14 +31,11 @@ import com.google.gson.reflect.TypeToken
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.Executors
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private val mainScope = CoroutineScope(Dispatchers.Main)
+    private lateinit var rootLayout: FrameLayout
     private lateinit var scannerBridge: ScannerBridge
 
     // ========== BRIDGE: Utils ==========
@@ -103,9 +101,9 @@ class MainActivity : AppCompatActivity() {
             val q = query.lowercase().trim()
             if (q.length < 2) return "[]"
             val results = items!!.filter { item ->
-                val nama = (item["Nama"] as? String) ?: ""
-                val barcode = (item["Barcode"] as? String) ?: ""
-                val kode = (item["Kode"] as? String) ?: ""
+                val nama = (item["Nama"] as? String) ?: (item["n"] as? String) ?: ""
+                val barcode = (item["Barcode"] as? String) ?: (item["b"] as? String) ?: ""
+                val kode = (item["Kode"] as? String) ?: (item["k"] as? String) ?: ""
                 nama.lowercase().contains(q) || barcode.contains(q) || kode.contains(q)
             }.take(50)
             return Gson().toJson(results)
@@ -114,7 +112,12 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun getByBarcode(barcode: String): String {
             if (!loaded || items == null) return "null"
-            val result = items!!.find { (it["Barcode"] as? String) == barcode || (it["Kode"] as? String) == barcode }
+            val result = items!!.find {
+                (it["Barcode"] as? String) == barcode ||
+                (it["Kode"] as? String) == barcode ||
+                (it["b"] as? String) == barcode ||
+                (it["k"] as? String) == barcode
+            }
             return if (result != null) Gson().toJson(result) else "null"
         }
 
@@ -135,72 +138,92 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun startScan(callbackJs: String) {
             scanCallback = callbackJs
-            mainScope.launch {
-                requestCameraAndScan()
+            isScanning = true
+            runOnUiThread {
+                if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.CAMERA), 100)
+                    return@runOnUiThread
+                }
+                startCameraScan()
             }
         }
-
-        private fun requestCameraAndScan() {
-            if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.CAMERA), 100)
-                return
-            }
-            startCameraScan()
-        }
-
-
 
         fun startCameraScan() {
-            if (isScanning) return
-            isScanning = true
+            try {
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(this@MainActivity)
+                cameraProviderFuture.addListener({
+                    try {
+                        cameraProvider = cameraProviderFuture.get()
+                        
+                        // Create and add PreviewView overlay
+                        if (previewView == null) {
+                            previewView = PreviewView(this@MainActivity).apply {
+                                layoutParams = FrameLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                                scaleType = PreviewView.ScaleType.FILL_CENTER
+                            }
+                            rootLayout.addView(previewView)
+                            
+                            // Close button overlay
+                            val closeBtn = android.widget.Button(this@MainActivity).apply {
+                                text = "✕"
+                                setOnClickListener { stopScan() }
+                                layoutParams = FrameLayout.LayoutParams(
+                                    dpToPx(this@MainActivity, 48f),
+                                    dpToPx(this@MainActivity, 48f)
+                                ).apply {
+                                    gravity = android.view.Gravity.TOP or android.view.Gravity.END
+                                    setMargins(0, 48, 16, 0)
+                                }
+                                textSize = 20f
+                                setTextColor(android.graphics.Color.WHITE)
+                                setBackgroundColor(android.graphics.Color.argb(180, 0, 0, 0))
+                            }
+                            rootLayout.addView(closeBtn)
+                            closeBtn.bringToFront()
+                        }
+                        previewView?.visibility = android.view.View.VISIBLE
 
-            // Create PreviewView dynamically
-            if (previewView == null) {
-                previewView = PreviewView(this@MainActivity)
-                previewView!!.layoutParams = android.view.ViewGroup.LayoutParams(1, 1)
-                (webView.parent as? android.view.ViewGroup)?.addView(previewView)
-            }
+                        val preview = Preview.Builder().build().also {
+                            it.surfaceProvider = previewView?.surfaceProvider
+                        }
 
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(this@MainActivity)
-            cameraProviderFuture.addListener({
-                try {
-                    cameraProvider = cameraProviderFuture.get()
-                    cameraProvider?.unbindAll()
+                        val barcodeOptions = com.google.mlkit.vision.barcode.BarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_128,
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_39,
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                                com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE
+                            ).build()
+                        val barcodeScanner = BarcodeScanning.getClient(barcodeOptions)
 
-                    val preview = Preview.Builder().build()
-                    preview.setSurfaceProvider(previewView!!.surfaceProvider)
+                        val imageAnalysis = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build()
 
-                    val barcodeOptions = com.google.mlkit.vision.barcode.BarcodeScannerOptions.Builder()
-                        .setBarcodeFormats(
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_128,
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_CODE_39,
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
-                            com.google.mlkit.vision.barcode.common.Barcode.FORMAT_QR_CODE
-                        ).build()
-                    val barcodeScanner = BarcodeScanning.getClient(barcodeOptions)
+                        imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                            if (!isScanning) { imageProxy.close(); return@setAnalyzer }
+                            processImage(imageProxy, barcodeScanner)
+                        }
 
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-
-                    imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-                        if (!isScanning) { imageProxy.close(); return@setAnalyzer }
-                        processImage(imageProxy, barcodeScanner)
+                        cameraProvider?.bindToLifecycle(
+                            this@MainActivity,
+                            CameraSelector.DEFAULT_BACK_CAMERA,
+                            preview,
+                            imageAnalysis
+                        )
+                    } catch (e: Exception) {
+                        sendScanResult("ERROR:${e.message}")
                     }
-
-                    cameraProvider?.bindToLifecycle(
-                        this@MainActivity,
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview,
-                        imageAnalysis
-                    )
-                } catch (e: Exception) {
-                    sendScanResult("ERROR:${e.message}")
-                }
-            }, ContextCompat.getMainExecutor(this@MainActivity))
+                }, ContextCompat.getMainExecutor(this@MainActivity))
+            } catch (e: Exception) {
+                sendScanResult("ERROR:${e.message}")
+            }
         }
 
         private fun processImage(imageProxy: ImageProxy, scanner: com.google.mlkit.vision.barcode.BarcodeScanner) {
@@ -215,12 +238,26 @@ class MainActivity : AppCompatActivity() {
                         if (!value.isNullOrBlank()) {
                             isScanning = false
                             cameraProvider?.unbindAll()
+                            // Remove preview overlay
+                            runOnUiThread { removeScannerOverlay() }
                             sendScanResult(value)
                             break
                         }
                     }
                 }
                 .addOnCompleteListener { imageProxy.close() }
+        }
+
+        private fun removeScannerOverlay() {
+            previewView?.let { rootLayout.removeView(it); previewView = null }
+            // Remove close button too
+            for (i in 0 until rootLayout.childCount) {
+                val child = rootLayout.getChildAt(i)
+                if (child is android.widget.Button && child.text == "✕") {
+                    rootLayout.removeView(child)
+                    break
+                }
+            }
         }
 
         private fun sendScanResult(result: String) {
@@ -234,7 +271,8 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun stopScan() {
             isScanning = false
-            cameraProvider?.unbindAll()
+            try { cameraProvider?.unbindAll() } catch (_: Exception) {}
+            runOnUiThread { removeScannerOverlay() }
         }
     }
 
@@ -243,8 +281,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Root layout: FrameLayout with WebView + optional scanner overlay
+        rootLayout = FrameLayout(this)
+        
         webView = WebView(this)
-        setContentView(webView)
+        webView.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        rootLayout.addView(webView)
+
+        setContentView(rootLayout)
 
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
@@ -287,4 +334,9 @@ class MainActivity : AppCompatActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
+}
+
+// Helper to convert dp to px
+fun dpToPx(context: Context, dp: Float): Int {
+    return (dp * context.resources.displayMetrics.density).toInt()
 }

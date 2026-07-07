@@ -180,6 +180,11 @@ document.addEventListener('click', function(e) {
 function copyText(str) {
   if (!str) return;
   try {
+    // Use native clipboard via AndroidUtils bridge if available
+    if (window.AndroidUtils) {
+      AndroidUtils.copyToClipboard(str);
+      return;
+    }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(str);
     } else {
