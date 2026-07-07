@@ -29,6 +29,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
+import com.gp45x.stockcheck.R
 
 class ScannerFragment : Fragment() {
     private var _binding: FragmentScannerBinding? = null
@@ -94,7 +95,7 @@ class ScannerFragment : Fragment() {
         provider.unbindAll()
 
         val preview = Preview.Builder().build()
-        preview.surfaceProvider = binding.previewView.surfaceProvider
+        preview.setSurfaceProvider(binding.previewView.surfaceProvider)
 
         val cameraSelector = CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
@@ -150,7 +151,7 @@ class ScannerFragment : Fragment() {
             cameraProvider?.let { provider ->
                 val camera = provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA,
                     Preview.Builder().build().apply {
-                        surfaceProvider = binding.previewView.surfaceProvider
+                        setSurfaceProvider(binding.previewView.surfaceProvider)
                     })
                 camera.cameraControl.enableTorch(torchOn)
             }
