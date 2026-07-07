@@ -1,0 +1,3 @@
+-keepclassmembers class com.gp45.hybrid.MainActivity$UtilsBridge { *; }
+-keepclassmembers class com.gp45.hybrid.MainActivity$DatabaseBridge { *; }
+-keepclassmembers class com.gp45.hybrid.MainActivity$ScannerBridge { *; }
