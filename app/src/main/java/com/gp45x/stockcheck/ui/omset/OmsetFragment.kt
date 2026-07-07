@@ -45,16 +45,16 @@ class OmsetFragment : Fragment() {
 
     private fun loadHarian() {
         isBulan = false
-        binding.btnHarian.setBackgroundColor(0xFF1976D2.toInt())
-        binding.btnBulan.setBackgroundColor(0xFF757575.toInt())
+        binding.btnHarian.setBackgroundColor(android.graphics.Color.parseColor("#1976D2"))
+        binding.btnBulan.setBackgroundColor(android.graphics.Color.parseColor("#757575"))
         binding.tvTitle.text = "Omset Harian"
         fetchOmset("omset")
     }
 
     private fun loadBulan() {
         isBulan = true
-        binding.btnBulan.setBackgroundColor(0xFF1976D2.toInt())
-        binding.btnHarian.setBackgroundColor(0xFF757575.toInt())
+        binding.btnBulan.setBackgroundColor(android.graphics.Color.parseColor("#1976D2"))
+        binding.btnHarian.setBackgroundColor(android.graphics.Color.parseColor("#757575"))
         binding.tvTitle.text = "Omset Bulan Ini"
         fetchOmset("omset-bulan")
     }

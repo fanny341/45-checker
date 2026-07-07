@@ -38,14 +38,14 @@ class SyncManager(private val context: Context) {
 
             val items = rawItems.map { raw ->
                 Item(
-                    kode = (raw["kode"] as? String) ?: (raw["Kode"] as? String) ?: "",
-                    nama = (raw["nama"] as? String) ?: (raw["Nama"] as? String) ?: "",
-                    barcode = (raw["barcode"] as? String) ?: (raw["BarcodeAktif"] as? String) ?: "",
-                    satuan = (raw["satuan"] as? String) ?: (raw["Satuan"] as? String) ?: "",
-                    merek = (raw["merek"] as? String) ?: (raw["Merek"] as? String) ?: "",
-                    hargaJual = ((raw["harga_jual"] as? Number)?.toLong()) ?: ((raw["HJual"] as? Number)?.toLong()) ?: 0,
-                    hargaBeli = ((raw["harga_beli"] as? Number)?.toLong()) ?: ((raw["HBeli"] as? Number)?.toLong()) ?: 0,
-                    stokGp45 = ((raw["gp45"] as? Number)?.toInt()) ?: 0,
+                    kode = (raw["Kode"] as? String) ?: (raw["kode"] as? String) ?: "",
+                    nama = (raw["Nama"] as? String) ?: (raw["nama"] as? String) ?: "",
+                    barcode = (raw["Barcode"] as? String) ?: (raw["barcode"] as? String) ?: (raw["BarcodeAktif"] as? String) ?: "",
+                    satuan = (raw["Satuan"] as? String) ?: (raw["satuan"] as? String) ?: "",
+                    merek = (raw["Merek"] as? String) ?: (raw["merek"] as? String) ?: "",
+                    hargaJual = ((raw["HJual"] as? Number)?.toLong()) ?: ((raw["harga_jual"] as? Number)?.toLong()) ?: 0,
+                    hargaBeli = ((raw["HBeli"] as? Number)?.toLong()) ?: ((raw["harga_beli"] as? Number)?.toLong()) ?: 0,
+                    stokGp45 = ((raw["Stok"] as? Number)?.toInt()) ?: ((raw["gp45"] as? Number)?.toInt()) ?: 0,
                     stokGp = ((raw["gp"] as? Number)?.toInt()) ?: 0,
                     stokMct = ((raw["mct"] as? Number)?.toInt()) ?: 0,
                     stokGh = ((raw["gh"] as? Number)?.toInt()) ?: 0,
@@ -53,12 +53,12 @@ class SyncManager(private val context: Context) {
                     stokGha = ((raw["gha"] as? Number)?.toInt()) ?: 0,
                     stokGhb = ((raw["ghb"] as? Number)?.toInt()) ?: 0,
                     stokHo = ((raw["ho"] as? Number)?.toInt()) ?: 0,
-                    hargaHk = ((raw["hk"] as? Number)?.toLong()) ?: ((raw["harga_hk"] as? Number)?.toLong()) ?: 0,
-                    hkNumber = (raw["hk_number"] as? String) ?: (raw["no_hk"] as? String) ?: "",
-                    hkExpire = (raw["hk_expire"] as? String) ?: (raw["expire_hk"] as? String) ?: "",
-                    hargaH2 = ((raw["h2"] as? Number)?.toLong()) ?: 0,
-                    hargaH3 = ((raw["h3"] as? Number)?.toLong()) ?: 0,
-                    updatedAt = (raw["updated_at"] as? String) ?: ""
+                    hargaHk = ((raw["HK"] as? Number)?.toLong()) ?: ((raw["hk"] as? Number)?.toLong()) ?: ((raw["harga_hk"] as? Number)?.toLong()) ?: 0,
+                    hkNumber = (raw["HK_Nama"] as? String) ?: (raw["hk_number"] as? String) ?: (raw["no_hk"] as? String) ?: "",
+                    hkExpire = (raw["HK_Expiry"] as? String) ?: (raw["hk_expire"] as? String) ?: (raw["expire_hk"] as? String) ?: "",
+                    hargaH2 = ((raw["HJual2"] as? Number)?.toLong()) ?: ((raw["h2"] as? Number)?.toLong()) ?: 0,
+                    hargaH3 = ((raw["HJual3"] as? Number)?.toLong()) ?: ((raw["h3"] as? Number)?.toLong()) ?: 0,
+                    updatedAt = ""
                 )
             }
 

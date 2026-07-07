@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM items ORDER BY CASE WHEN stok_gp45 > 0 THEN 0 ELSE 1 END, nama ASC LIMIT 50")
+    @Query("SELECT * FROM items ORDER BY CASE WHEN stok_gp45 > 0 THEN 0 ELSE 1 END, nama ASC LIMIT 5000")
     fun getRecent(): Flow<List<Item>>
 
     @Query("SELECT * FROM items WHERE kode = :kode LIMIT 1")

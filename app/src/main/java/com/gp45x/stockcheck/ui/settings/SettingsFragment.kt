@@ -13,6 +13,8 @@ import com.gp45x.stockcheck.util.getServerIp
 import com.gp45x.stockcheck.util.saveServerIp
 import com.gp45x.stockcheck.util.openUrl
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
@@ -61,8 +63,11 @@ class SettingsFragment : Fragment() {
             binding.progressBar.progress = 0
 
             val result = syncManager.syncAll { progress ->
-                binding.tvStatus.text = progress.status
-                binding.progressBar.progress = progress.percent
+                // UI updates must run on Main thread
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    binding.tvStatus.text = progress.status
+                    binding.progressBar.progress = progress.percent
+                }
             }
 
             result.fold(

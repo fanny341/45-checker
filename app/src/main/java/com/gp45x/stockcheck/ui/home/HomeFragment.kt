@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gp45x.stockcheck.R
@@ -70,13 +71,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun showDetail(item: Item) {
-        val ft = parentFragmentManager.beginTransaction()
-        val prev = parentFragmentManager.findFragmentByTag("detail")
-        if (prev != null) ft.remove(prev)
-        ft.addToBackStack(null)
-        val detail = com.gp45x.stockcheck.ui.detail.DetailFragment.newInstance(item.kode)
-        ft.replace(R.id.nav_host_fragment, detail, "detail")
-        ft.commit()
+        try {
+            val ft = parentFragmentManager.beginTransaction()
+            val prev = parentFragmentManager.findFragmentByTag("detail")
+            if (prev != null) ft.remove(prev)
+            ft.addToBackStack(null)
+            val detail = com.gp45x.stockcheck.ui.detail.DetailFragment.newInstance(item.kode)
+            ft.replace(R.id.nav_host_fragment, detail, "detail")
+            ft.commit()
+        } catch (e: Exception) {
+            // Fallback: try using navController
+            try {
+                findNavController().navigate(R.id.homeFragment)
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onDestroyView() {

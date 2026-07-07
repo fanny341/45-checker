@@ -81,11 +81,23 @@ class ScannerFragment : Fragment() {
         binding.btnScan.text = "📷 Scan Aktif"
         isScanning = true
 
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
-            bindCamera()
-        }, ContextCompat.getMainExecutor(requireContext()))
+        try {
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+            cameraProviderFuture.addListener({
+                try {
+                    cameraProvider = cameraProviderFuture.get()
+                    bindCamera()
+                } catch (e: Exception) {
+                    binding.tvStatus.text = "❌ Kamera error: ${e.message}"
+                    binding.btnScan.text = "📷 Coba Lagi"
+                    isScanning = false
+                }
+            }, ContextCompat.getMainExecutor(requireContext()))
+        } catch (e: Exception) {
+            binding.tvStatus.text = "❌ Kamera tidak tersedia"
+            binding.btnScan.text = "📷 Coba Lagi"
+            isScanning = false
+        }
     }
 
     @OptIn(ExperimentalGetImage::class)
@@ -133,12 +145,18 @@ class ScannerFragment : Fragment() {
     }
 
     private suspend fun handleBarcode(value: String) {
-        var item = repository.getByBarcode(value)
-        if (item == null) item = repository.getByKode(value)
-        if (item != null) {
-            showResult(item)
-        } else {
-            binding.tvStatus.text = "❌ Tidak ditemukan: $value"
+        try {
+            var item = repository.getByBarcode(value)
+            if (item == null) item = repository.getByKode(value)
+            if (item != null) {
+                showResult(item)
+            } else {
+                binding.tvStatus.text = "❌ Tidak ditemukan: $value"
+                binding.btnScan.text = "📷 Scan Lagi"
+                isScanning = false
+            }
+        } catch (e: Exception) {
+            binding.tvStatus.text = "❌ Error: ${e.message}"
             binding.btnScan.text = "📷 Scan Lagi"
             isScanning = false
         }
@@ -155,7 +173,9 @@ class ScannerFragment : Fragment() {
                     })
                 camera.cameraControl.enableTorch(torchOn)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            binding.tvStatus.text = "❌ Torch: ${e.message}"
+        }
     }
 
     private fun showResult(item: Item) {
