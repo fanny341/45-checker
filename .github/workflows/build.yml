@@ -28,6 +28,9 @@ jobs:
 
       - name: Sign APK
         run: |
+          export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          BUILD_TOOLS=$(ls -1 "$ANDROID_SDK_ROOT/build-tools/" | sort -V | tail -1)
+          export PATH="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS:$PATH"
           keytool -genkey -v -keystore debug.keystore -alias gp45 \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass android -keypass android \
